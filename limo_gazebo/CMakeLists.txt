@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(rrbot_gazebo)
+project(limo_gazebo)
 
 # Default to C99
 if(NOT CMAKE_C_STANDARD)
@@ -50,9 +50,9 @@ install(DIRECTORY
   # add directories here
   launch
   rviz
-  config
   world
   models
+  config
   DESTINATION share/${PROJECT_NAME})
 
 ament_package()

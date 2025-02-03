@@ -18,7 +18,7 @@ def generate_launch_description():
   pkg_gazebo_ros = FindPackageShare(package='gazebo_ros').find('gazebo_ros')   
    
   # Set the path to this package.
-  pkg_share = FindPackageShare(package='rrbot_gazebo').find('rrbot_gazebo')
+  pkg_share = FindPackageShare(package='limo_gazebo').find('limo_gazebo')
  
   # Set the path to the world file
   world_file_name = 'basic.world'

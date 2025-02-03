@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-from rrbot_description.dummy_module import dummy_function, dummy_var
+from limo_description.dummy_module import dummy_function, dummy_var
 import rclpy
 from rclpy.node import Node
 
