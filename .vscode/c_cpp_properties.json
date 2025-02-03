@@ -1,0 +1,39 @@
+{
+  "configurations": [
+    {
+      "browse": {
+        "databaseFilename": "${default}",
+        "limitSymbolsToIncludedHeaders": false
+      },
+      "includePath": [
+        "/home/gun/CARVER_WS/install/rtabmap_conversions/include/**",
+        "/home/gun/CARVER_WS/install/rtabmap_msgs/include/**",
+        "/home/gun/CARVER_WS/install/realsense2_camera/include/**",
+        "/home/gun/CARVER_WS/install/realsense2_camera_msgs/include/**",
+        "/home/gun/solar_ws/install/pointcloud_to_laserscan/include/**",
+        "/home/gun/FUN4_6509/install/robot_action/include/**",
+        "/home/gun/ros2_ws/install/turtlesim_plus_interfaces/include/**",
+        "/home/gun/ros2_ws/install/my_robot_interfaces/include/**",
+        "/home/gun/ros2_ws/install/controller_interfaces/include/**",
+        "/home/gun/ros2_ws/install/amt212ev_interfaces/include/**",
+        "/home/gun/turtlebot3_ws/install/turtlebot3_gazebo/include/**",
+        "/home/gun/turtlebot3_ws/install/turtlebot3_fake_node/include/**",
+        "/home/gun/RoboticsDev2024/install/motorsim_interfaces/include/**",
+        "/home/gun/exam1/install/turtlesim_plus_interfaces/include/**",
+        "/home/gun/exam1/install/custom_interface/include/**",
+        "/home/gun/microros_ws/install/micro_ros_agent/include/**",
+        "/home/gun/microros_ws/install/micro_ros_msgs/include/**",
+        "/home/gun/FUN4/install/fun4_interfaces/include/**",
+        "/opt/ros/humble/include/**",
+        "/home/gun/MOBILE_ROBOT_WS/src/Mobile-Robot-LAB-1/mobile_description/include/**",
+        "/usr/include/**"
+      ],
+      "name": "ROS",
+      "intelliSenseMode": "gcc-x64",
+      "compilerPath": "/usr/bin/gcc",
+      "cStandard": "gnu11",
+      "cppStandard": "c++14"
+    }
+  ],
+  "version": 4
+}
