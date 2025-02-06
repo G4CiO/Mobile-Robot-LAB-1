@@ -5,7 +5,8 @@
     <xacro:arg name="robot_namespace" default="/" />
     <xacro:include filename="$(find limo_description)/urdf/limo_xacro.xacro" />
     <xacro:include filename="$(find limo_description)/urdf/limo_steering_hinge.xacro" />
-    <xacro:include filename="$(find limo_description)/urdf/limo_ackerman.gazebo" />
+    <!-- <xacro:include filename="$(find limo_description)/urdf/limo_ackerman.gazebo" /> -->
+    <xacro:include filename="$(find limo_description)/urdf/gazebo_control.xacro" />
 
     <!-- Variables -->
     <xacro:property name="M_PI" value="3.14159"/>
@@ -18,7 +19,7 @@
     <xacro:property name="wheelbase" value="0.2"/>
     <xacro:property name="track" value="0.14"/>
     <xacro:property name="wheel_vertical_offset" value="-0.100998" />
-    <xacro:property name="base_mass" value="2.1557"/>
+    <xacro:property name="base_mass" value="3.0"/>
 
     <xacro:property name="wheel_length" value="0.045" />
     <xacro:property name="wheel_radius" value="0.045" />
@@ -34,7 +35,7 @@
         <visual>
             <origin xyz="0 0 -0.15" rpy="0 0 1.57" />
             <geometry>
-                <mesh filename="package://limo_description/meshes/limo_base.dae" scale="1 1 1"/>
+                <mesh filename="file:///$(find limo_description)/meshes/limo_base.dae" />
             </geometry>
         </visual>
         <collision>
@@ -61,7 +62,7 @@
         <child link="inertial_link" />
     </joint>
 
-    <xacro:limo_laser parent_prefix="base_link" frame_prefix="laser">
+    <!-- <xacro:limo_laser parent_prefix="base_link" frame_prefix="laser">
         <origin xyz="0.103 0 -0.034" rpy="0 0 0"/>
     </xacro:limo_laser>
 
@@ -71,7 +72,7 @@
 
     <xacro:limo_imu parent_prefix="base_link" frame_prefix="imu">
         <origin xyz="0.0 0 -0.1" rpy="0 0 0"/>
-    </xacro:limo_imu>
+    </xacro:limo_imu> -->
     
     <xacro:limo_left_steering_hinge parent_prefix="base_link" wheel_prefix="left_steering_hinge">
         <origin xyz="${wheelbase/2} ${track/2} ${wheel_vertical_offset}" rpy="0 0  0" />
@@ -91,7 +92,7 @@
         <visual>
             <origin xyz="0 0 0" rpy="0 0 0" />
             <geometry>
-                <mesh filename="package://limo_description/meshes/limo_wheel.dae" />
+                <mesh filename="file:///$(find limo_description)/meshes/limo_wheel.dae" />
             </geometry>
         </visual>
         <collision>
@@ -117,7 +118,7 @@
         <visual>
             <origin xyz="0 0 0" rpy="0 0 0" />
             <geometry>
-                <mesh filename="package://limo_description/meshes/limo_wheel.dae" />
+                <mesh filename="file:///$(find limo_description)/meshes/limo_wheel.dae" />
             </geometry>
         </visual>
             <collision>
@@ -128,10 +129,10 @@
             </collision>
         </link>
 
-        <joint name="rear_right_wheel" type="continuous">
-            <parent link="base_link"/>
-            <child link="rear_right_wheel_link"/>
-            <origin xyz="${-wheelbase/2} ${-track/2} ${wheel_vertical_offset}" rpy="${M_PI} 0 0" />
-            <axis xyz="0 -1 0"/>
-        </joint>
+    <joint name="rear_right_wheel" type="continuous">
+        <parent link="base_link"/>
+        <child link="rear_right_wheel_link"/>
+        <origin xyz="${-wheelbase/2} ${-track/2} ${wheel_vertical_offset}" rpy="${M_PI} 0 0" />
+        <axis xyz="0 -1 0"/>
+    </joint>
 </robot>

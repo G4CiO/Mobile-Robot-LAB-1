@@ -32,7 +32,7 @@
         <visual>
             <origin xyz="0 0 -0.15" rpy="0 0 1.57" />
             <geometry>
-                <mesh filename="package://limo_description/meshes/limo_base.dae" scale="1 1 1"/>
+                <mesh filename="file:///$(find limo_description)/meshes/limo_base.dae" scale="1 1 1"/>
             </geometry>
         </visual>
         <collision>
