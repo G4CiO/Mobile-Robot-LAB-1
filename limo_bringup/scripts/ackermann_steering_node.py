@@ -15,10 +15,11 @@ import numpy as np
 class AckermannSteeringNode(Node):
     def __init__(self):
         super().__init__('ackermann_steering_node')
+        self.get_logger().info("ackermann_steering_node has been start.")
         # Sub
         self.subscription = self.create_subscription(Twist, '/cmd_vel', self.cmd_vel_callback, 10)
         # Pub
-        self.publisher = self.create_publisher(JointTrajectory, '/joint_trajectory_controller/joint_trajectory', 10)
+        self.wheel_angle_pub = self.create_publisher(JointTrajectory, '/joint_trajectory_controller/joint_trajectory', 10)
         self.wheel_velo_pub = self.create_publisher(Float64MultiArray, '/velocity_controllers/commands', 10)
 
         # Vehicle Parameters
@@ -48,9 +49,6 @@ class AckermannSteeringNode(Node):
 
         # Create JointTrajectory message
         trajectory = JointTrajectory()
-        # trajectory.header.stamp = self.get_clock().now().to_msg()
-        # trajectory.header.stamp.sec = 0
-        # trajectory.header.stamp.sec = 0
         trajectory.header.frame_id = ''
         trajectory.joint_names = ['left_steering_hinge_wheel', 'right_steering_hinge_wheel']
 
@@ -73,7 +71,7 @@ class AckermannSteeringNode(Node):
         trajectory.points = [point]
 
         # Publish the trajectory
-        self.publisher.publish(trajectory)
+        self.wheel_angle_pub.publish(trajectory)
 
 def main(args=None):
     rclpy.init(args=args)
