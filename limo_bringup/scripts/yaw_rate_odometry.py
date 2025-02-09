@@ -59,6 +59,7 @@ class YawRateOdometryNode(Node):
         y_curr = self.y_prev + self.linear_velocity * self.dt * math.sin(self.theta_prev + beta + ((self.yaw_rate * self.dt) / 2))
         theta_curr = self.theta_prev + self.yaw_rate * self.dt
         self.quaternion = tf_transformations.quaternion_from_euler(0.0, 0.0, self.theta_prev)
+        # self.v_curr = (self.v_rl + self.v_rr)/2
 
         # Update state
         self.x_prev = x_curr

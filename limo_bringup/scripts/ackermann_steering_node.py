@@ -35,7 +35,7 @@ class AckermannSteeringNode(Node):
         wheelradius = self.get_parameter('wheelradius').value
 
         # v = msg.linear.x
-        v = 0.5 # m/s
+        v = 0.0 # m/s
         angular_velo_wheel = v / wheelradius
         omega = msg.angular.z
 
