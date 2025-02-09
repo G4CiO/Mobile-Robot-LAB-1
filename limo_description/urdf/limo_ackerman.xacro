@@ -62,7 +62,7 @@
         <child link="inertial_link" />
     </joint>
 
-    <!-- <xacro:limo_laser parent_prefix="base_link" frame_prefix="laser">
+    <xacro:limo_laser parent_prefix="base_link" frame_prefix="laser">
         <origin xyz="0.103 0 -0.034" rpy="0 0 0"/>
     </xacro:limo_laser>
 
@@ -72,7 +72,7 @@
 
     <xacro:limo_imu parent_prefix="base_link" frame_prefix="imu">
         <origin xyz="0.0 0 -0.1" rpy="0 0 0"/>
-    </xacro:limo_imu> -->
+    </xacro:limo_imu>
     
     <xacro:limo_left_steering_hinge parent_prefix="base_link" wheel_prefix="left_steering_hinge">
         <origin xyz="${wheelbase/2} ${track/2} ${wheel_vertical_offset}" rpy="0 0  0" />

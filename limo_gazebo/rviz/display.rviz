@@ -4,9 +4,13 @@ Panels:
     Name: Displays
     Property Tree Widget:
       Expanded:
+        - /Global Options1
+        - /Grid1
         - /RobotModel1
         - /RobotModel1/Description Topic1
         - /TF1
+        - /TF1/Tree1
+        - /TF1/Tree1/base_footprint1
       Splitter Ratio: 0.5
     Tree Height: 746
   - Class: rviz_common/Selection
@@ -45,7 +49,7 @@ Visualization Manager:
         Y: 0
         Z: 0
       Plane: XY
-      Plane Cell Count: 10
+      Plane Cell Count: 20
       Reference Frame: <Fixed Frame>
       Value: true
     - Alpha: 1
@@ -75,6 +79,15 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
           Value: true
+        depth_camera_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        depth_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
         front_left_wheel_link:
           Alpha: 1
           Show Axes: false
@@ -85,10 +98,20 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
           Value: true
+        imu_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
         inertial_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
+        laser_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
         left_steering_hinge:
           Alpha: 1
           Show Axes: false
@@ -126,13 +149,19 @@ Visualization Manager:
           Value: true
         base_link:
           Value: true
-        front_left_wheel_link:
+        depth_camera_link:
           Value: true
-        front_right_wheel_link:
+        depth_link:
+          Value: true
+        imu_link:
           Value: true
         inertial_link:
           Value: true
+        laser_link:
+          Value: true
         left_steering_hinge:
+          Value: true
+        odom:
           Value: true
         rear_left_wheel_link:
           Value: true
@@ -148,24 +177,31 @@ Visualization Manager:
       Tree:
         base_footprint:
           base_link:
+            depth_camera_link:
+              depth_link:
+                {}
+            imu_link:
+              {}
             inertial_link:
               {}
+            laser_link:
+              {}
             left_steering_hinge:
-              front_left_wheel_link:
-                {}
+              {}
             rear_left_wheel_link:
               {}
             rear_right_wheel_link:
               {}
             right_steering_hinge:
-              front_right_wheel_link:
-                {}
+              {}
+        odom:
+          {}
       Update Interval: 0
       Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
-    Fixed Frame: base_footprint
+    Fixed Frame: odom
     Frame Rate: 30
   Name: root
   Tools:
@@ -208,25 +244,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 0.982961118221283
+      Distance: 53.72241973876953
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 0
-        Y: 0
-        Z: 0
+        X: -1.2199149131774902
+        Y: -0.6090756058692932
+        Z: -11.308989524841309
       Focal Shape Fixed Size: false
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.33539819717407227
+      Pitch: 1.5697963237762451
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 0.6453972458839417
+      Yaw: 3.135394811630249
     Saved: ~
 Window Geometry:
   Displays:

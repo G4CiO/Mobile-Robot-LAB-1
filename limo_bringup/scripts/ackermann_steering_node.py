@@ -24,6 +24,7 @@ class AckermannSteeringNode(Node):
 
         # Vehicle Parameters
         self.declare_parameter('wheelbase', 0.2)   # meters
+        self.declare_parameter('wheelradius', 0.045)   # meters
         self.declare_parameter('track_width', 0.14) # meters
         self.declare_parameter('steering_ratio', 1.0)
 
@@ -31,9 +32,11 @@ class AckermannSteeringNode(Node):
         wheelbase = self.get_parameter('wheelbase').value
         track_width = self.get_parameter('track_width').value
         steering_ratio = self.get_parameter('steering_ratio').value
+        wheelradius = self.get_parameter('wheelradius').value
 
         # v = msg.linear.x
-        v = 15.0
+        v = 0.5 # m/s
+        angular_velo_wheel = v / wheelradius
         omega = msg.angular.z
 
         if omega == 0:
@@ -45,7 +48,7 @@ class AckermannSteeringNode(Node):
             delta_L = math.atan((wheelbase * math.tan(delta_ack)) / (wheelbase - 0.5 * track_width * math.tan(delta_ack)))
             delta_R = math.atan((wheelbase * math.tan(delta_ack)) / (wheelbase + 0.5 * track_width * math.tan(delta_ack)))
         
-        print(f'delta_L: {delta_L}\ndelta_R: {delta_R}')
+        print(f'delta_L: {delta_L} delta_R: {delta_R}')
 
         # Create JointTrajectory message
         trajectory = JointTrajectory()
@@ -62,7 +65,7 @@ class AckermannSteeringNode(Node):
 
         # Create VelocityControllers for the wheel velocity
         wheel_velocity = Float64MultiArray()
-        wheel_velocity.data = [v, v]
+        wheel_velocity.data = [angular_velo_wheel, angular_velo_wheel]
 
         # Publish the wheel velocity
         self.wheel_velo_pub.publish(wheel_velocity)
