@@ -21,15 +21,19 @@ class BicycleModelNode(Node):
 
         # Vehicle Parameters
         self.declare_parameter('wheelbase', 1.0)  # meters
+        self.declare_parameter('wheelradius', 0.045)   # meters
 
     def cmd_vel_callback(self, msg:Twist):
         wheelbase = self.get_parameter('wheelbase').value
+        wheelradius = self.get_parameter('wheelradius').value
 
-        # v = msg.linear.x
-        v = 15.0
+        v = msg.linear.x
+        angular_velo_wheel = v / wheelradius
         omega = msg.angular.z
-
-        delta = math.atan(wheelbase * omega / v) if v != 0 else 0
+        if omega == 0:
+            delta = 0.0  # Moving straight
+        else:
+            delta = math.atan(wheelbase * omega / v) if v != 0 else 0
 
         # Create JointTrajectory message
         trajectory = JointTrajectory()
@@ -46,7 +50,7 @@ class BicycleModelNode(Node):
 
         # Create VelocityControllers for the wheel velocity
         wheel_velocity = Float64MultiArray()
-        wheel_velocity.data = [v, v]
+        wheel_velocity.data = [angular_velo_wheel, angular_velo_wheel]
 
         # Publish the wheel velocity
         self.wheel_velo_pub.publish(wheel_velocity)

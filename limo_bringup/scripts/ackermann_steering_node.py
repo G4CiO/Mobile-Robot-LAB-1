@@ -34,8 +34,7 @@ class AckermannSteeringNode(Node):
         steering_ratio = self.get_parameter('steering_ratio').value
         wheelradius = self.get_parameter('wheelradius').value
 
-        # v = msg.linear.x
-        v = 0.0 # m/s
+        v = msg.linear.x
         angular_velo_wheel = v / wheelradius
         omega = msg.angular.z
 
@@ -48,8 +47,6 @@ class AckermannSteeringNode(Node):
             delta_L = math.atan((wheelbase * math.tan(delta_ack)) / (wheelbase - 0.5 * track_width * math.tan(delta_ack)))
             delta_R = math.atan((wheelbase * math.tan(delta_ack)) / (wheelbase + 0.5 * track_width * math.tan(delta_ack)))
         
-        print(f'delta_L: {delta_L} delta_R: {delta_R}')
-
         # Create JointTrajectory message
         trajectory = JointTrajectory()
         trajectory.header.frame_id = ''

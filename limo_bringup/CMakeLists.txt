@@ -30,7 +30,7 @@ install(PROGRAMS
   scripts/dummy_script.py
   scripts/ackermann_steering_node.py
   scripts/bicycle_model_node.py
-  scripts/yaw_rate_odometry.py
+  scripts/odometry_calculation.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
@@ -51,6 +51,7 @@ install(TARGETS
 ################ INSTALL LAUNCH, ETC #################
 install(DIRECTORY
   # add directories here
+  launch
   DESTINATION share/${PROJECT_NAME})
 
 ament_package()
