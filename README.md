@@ -29,3 +29,7 @@
     ```bash
     ros2 launch limo_bringup limo_bringup.launch.py
     ```
+2. Control robot by teleop_twist_keyboard in another terminal.
+    ```
+    ros2 run teleop_twist_keyboard teleop_twist_keyboard
+    ```
