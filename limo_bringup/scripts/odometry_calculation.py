@@ -74,13 +74,11 @@ class YawRateOdometryNode(Node):
         # ROS 2 subscriptions
         self.create_subscription(Imu, '/imu_plugin/out', self.imu_callback, 10)
         self.create_subscription(JointState, '/joint_states', self.jointstates_callback, 10)
-        self.create_subscription(Odometry, '/odometry/gt', self.ground_truth_callback, 10)
 
         # ROS 2 publishers
         self.yaw_rate_publisher = self.create_publisher(Odometry, '/odometry/yaw_rate', 10)
         self.single_track_publisher = self.create_publisher(Odometry, '/odometry/single_track', 10)
         self.double_track_publisher = self.create_publisher(Odometry, '/odometry/double_track', 10)
-        self.ground_truth_publisher = self.create_publisher(Odometry, '/odometry/ground_truth', 10)
         
         # TF broadcaster
         self.tf_broadcaster = tf2_ros.TransformBroadcaster(self)
@@ -95,33 +93,10 @@ class YawRateOdometryNode(Node):
 
     def jointstates_callback(self, msg:JointState):
         """ Callback to get JointState from /jointstates topic """
-        # self.L_REAR_STEER_ANGLE = msg.position[2]
-        # self.R_REAR_STEER_ANGLE = msg.position[3]
+        self.left_steering_hinge_wheel = msg.position[2]
+        self.right_steering_hinge_wheel = msg.position[3]
         self.v_rl = msg.velocity[0] * self.wheelradius
         self.v_rr = msg.velocity[1] * self.wheelradius
-
-    def ground_truth_callback(self, msg:Odometry):
-       # Publish odometry message
-        odom_msg = Odometry()
-        odom_msg.header.stamp = msg.header.stamp
-        odom_msg.header.frame_id = msg.header.frame_id
-        odom_msg.child_frame_id = msg.child_frame_id
-
-        # Position
-        odom_msg.pose.pose.position.x = -msg.pose.pose.position.y
-        odom_msg.pose.pose.position.y = msg.pose.pose.position.x
-        odom_msg.pose.pose.position.z = msg.pose.pose.position.z
-
-        # Orientation (Quaternion from Yaw)
-        odom_msg.pose.pose.orientation = msg.pose.pose.orientation
-
-        # Twist
-        odom_msg.twist.twist.linear.x = -msg.twist.twist.linear.y
-        odom_msg.twist.twist.linear.y = msg.twist.twist.linear.x
-        odom_msg.twist.twist.angular  = msg.twist.twist.angular
-
-        # Publish odometry
-        self.ground_truth_publisher.publish(odom_msg)
 
     def update_odometry(self):
         # Publish Odom (odom -> base_footprint)
@@ -130,7 +105,6 @@ class YawRateOdometryNode(Node):
         self.Odo2Track()
         # Publish TF transformation (odom -> base_footprint)
         self.publish_tf()
-
 
     def OdoYawRate(self):
 

@@ -13,18 +13,18 @@
             <parameters>$(find limo_description)/config/gazebo_controllers.yaml</parameters>
         </plugin>
 
-        <plugin name="gazebo_ros_p3d" filename="libgazebo_ros_p3d.so">
+        <plugin name="ground_truth_plugin" filename="libgazebo_ros_p3d.so">
             <ros>
                 <!-- The topic name where the position will be published -->
-                <remapping>odom:=/odometry/gt</remapping>
+                <remapping>odom:=/odometry/ground_truth</remapping>
             </ros>
-            <frame_name>odom</frame_name>
+            <frameName>world</frameName>
             <!-- Replace with your robot's main link -->
             <body_name>base_footprint</body_name>
             <!-- Update rate in Hz -->
-            <update_rate>100.0</update_rate>
-            <xyz_offset>-9.5 0.0 0.0</xyz_offset>
-            <rpy_offset>0.0 0.0 1.5708</rpy_offset>
+            <updateRate>100.0</updateRate>
+            <!-- <xyz_offset>-9.5 0.0 0.0</xyz_offset>
+            <rpy_offset>0.0 0.0 1.5708</rpy_offset> -->
         </plugin>
     </gazebo>
 

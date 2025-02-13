@@ -33,7 +33,7 @@ class BicycleModelNode(Node):
         if omega == 0:
             delta = 0.0  # Moving straight
         else:
-            delta = math.atan(wheelbase * omega / v) if v != 0 else 0
+            delta = math.atan(wheelbase * omega / v) if abs(v) > 1e-6 else 0.0
 
         # Create JointTrajectory message
         trajectory = JointTrajectory()
@@ -42,7 +42,7 @@ class BicycleModelNode(Node):
 
         # Create JointTrajectoryPoint for the steering angles
         point = JointTrajectoryPoint()
-        point.positions = [delta, delta]
+        point.positions = [float(delta), float(delta)]
         point.velocities = [0.0, 0.0]  # Assuming zero velocities for now
         point.accelerations = [0.0, 0.0]  # Assuming zero accelerations for now
         point.time_from_start.sec = 1  # Adjust as needed

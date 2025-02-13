@@ -76,13 +76,13 @@ def generate_launch_description():
         executable="spawn_entity.py",
         arguments=[
             "-topic", "robot_description",
-            "-entity", "limo_ackerman",
-            '-x', '9.5',
-            '-y', '0.0',
-            '-z', '0.0',
-            '-R', '0.0',
-            '-P', '0.0',
-            '-Y', '-1.57'
+            "-entity", "limo_ackerman"
+            # '-x', '9.5',
+            # '-y', '0.0',
+            # '-z', '0.0',
+            # '-R', '0.0',
+            # '-P', '0.0',
+            # '-Y', '-1.57'
         ],
         output = "screen"
     )
@@ -105,7 +105,13 @@ def generate_launch_description():
         arguments=["joint_trajectory_controller", "--controller-manager", "/controller_manager"],
     )
 
-
+    # Static Transform Publisher (world -> odom)
+    static_tf = Node(
+        package="tf2_ros",
+        executable="static_transform_publisher",
+        arguments=["0", "0", "0", "0", "0", "0", "world", "odom"],
+        output="screen"
+    )
 
     launch_description = LaunchDescription()
     
@@ -116,6 +122,7 @@ def generate_launch_description():
     launch_description.add_action(joint_state_broadcaster_spawner)
     launch_description.add_action(velocity_controllers)
     launch_description.add_action(joint_trajectory_controller)
+    launch_description.add_action(static_tf)
 
     
     return launch_description
