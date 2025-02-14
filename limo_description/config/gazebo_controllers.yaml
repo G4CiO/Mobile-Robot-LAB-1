@@ -17,6 +17,7 @@ joint_trajectory_controller:
     joints:
       - left_steering_hinge_wheel
       - right_steering_hinge_wheel
+      - steering
     interface_name: position
     command_interfaces:
       - position

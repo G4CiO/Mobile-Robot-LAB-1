@@ -66,8 +66,8 @@ def generate_launch_description():
     launch_description = LaunchDescription()
     
     launch_description.add_action(sim)
-    launch_description.add_action(ackermann_steering_node)
+    # launch_description.add_action(ackermann_steering_node)
     # launch_description.add_action(bicycle_model_node)
-    launch_description.add_action(odometry_calculation)
+    # launch_description.add_action(odometry_calculation)
     
     return launch_description

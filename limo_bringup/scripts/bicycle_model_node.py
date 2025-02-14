@@ -20,6 +20,7 @@ class BicycleModelNode(Node):
         self.wheel_velo_pub = self.create_publisher(Float64MultiArray, '/velocity_controllers/commands', 10)
 
         # Vehicle Parameters
+        self.delta_steer = 0.0
         self.declare_parameter('wheelbase', 1.0)  # meters
         self.declare_parameter('wheelradius', 0.045)   # meters
 
@@ -31,22 +32,26 @@ class BicycleModelNode(Node):
         angular_velo_wheel = v / wheelradius
         omega = msg.angular.z
         if omega == 0:
-            delta = 0.0  # Moving straight
+            self.delta_steer = 0.0
         else:
-            delta = math.atan(wheelbase * omega / v) if abs(v) > 1e-6 else 0.0
+            # delta = math.atan(wheelbase * omega / v) if v != 0 else 0
+            epsilon = 1e-6  # Small threshold to avoid division by zero
+            self.delta_steer = math.atan(wheelbase * omega / (v if abs(v) > epsilon else epsilon))
 
         # Create JointTrajectory message
         trajectory = JointTrajectory()
         trajectory.header.frame_id = ''
-        trajectory.joint_names = ['left_steering_hinge_wheel', 'right_steering_hinge_wheel']
+        trajectory.joint_names = ['left_steering_hinge_wheel', 'right_steering_hinge_wheel', 'steering']
 
         # Create JointTrajectoryPoint for the steering angles
         point = JointTrajectoryPoint()
-        point.positions = [float(delta), float(delta)]
-        point.velocities = [0.0, 0.0]  # Assuming zero velocities for now
-        point.accelerations = [0.0, 0.0]  # Assuming zero accelerations for now
-        point.time_from_start.sec = 1  # Adjust as needed
-        point.time_from_start.nanosec = 0
+        point.positions = [float(self.delta_steer), float(self.delta_steer), float(self.delta_steer)]
+        point.velocities = [0.0, 0.0, 0.0]  # Assuming zero velocities for now
+        point.accelerations = [0.0, 0.0, 0.0]  # Assuming zero accelerations for now
+        point.time_from_start.sec = 0  # Adjust as needed
+        second = 0.5
+        sec_to_nanosec = second * pow(10,9)
+        point.time_from_start.nanosec = int(sec_to_nanosec)
 
         # Create VelocityControllers for the wheel velocity
         wheel_velocity = Float64MultiArray()

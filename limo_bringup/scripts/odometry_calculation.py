@@ -71,6 +71,9 @@ class YawRateOdometryNode(Node):
         self.L_RY = track_width/2  # Left rear wheel y-offset 
         self.R_RY = -track_width/2   # Right rear wheel y-offset 
 
+        self.delta = 0.0
+        self.v = 0.0
+
         # ROS 2 subscriptions
         self.create_subscription(Imu, '/imu_plugin/out', self.imu_callback, 10)
         self.create_subscription(JointState, '/joint_states', self.jointstates_callback, 10)
@@ -93,8 +96,7 @@ class YawRateOdometryNode(Node):
 
     def jointstates_callback(self, msg:JointState):
         """ Callback to get JointState from /jointstates topic """
-        self.left_steering_hinge_wheel = msg.position[2]
-        self.right_steering_hinge_wheel = msg.position[3]
+        self.steering_angle = msg.position[4]
         self.v_rl = msg.velocity[0] * self.wheelradius
         self.v_rr = msg.velocity[1] * self.wheelradius
 
@@ -130,14 +132,10 @@ class YawRateOdometryNode(Node):
         
         self.x_curr_1Track = self.x_prev_1Track + self.v_prev_1Track * self.dt * math.cos(self.theta_prev_1Track + self.BETA + ((self.w_prev_1Track * self.dt) / 2))
         self.y_curr_1Track = self.y_prev_1Track + self.v_prev_1Track * self.dt * math.sin(self.theta_prev_1Track + self.BETA + ((self.w_prev_1Track * self.dt) / 2))
-        self.theta_curr_1Track = self.theta_prev_1Track + self.w_prev_2Track * self.dt
+        self.theta_curr_1Track = self.theta_prev_1Track + self.w_prev_1Track * self.dt
         self.quaternion_1Track = tf_transformations.quaternion_from_euler(0.0, 0.0, self.theta_curr_1Track)
         self.v_curr_1Track = (self.v_rl + self.v_rr) / 2
-        if self.v_prev_1Track != 0:
-            BETA_F = math.atan(((self.w_prev_1Track * self.wheelbase) / (self.v_prev_1Track * math.cos(self.BETA))) + math.tan(self.BETA))
-        else:
-            BETA_F = 0.0  # or some other default value
-        self.w_curr_1Track = (self.v_prev_1Track / self.wheelbase) * math.tan(BETA_F)
+        self.w_curr_1Track = (self.v_prev_1Track / self.wheelbase) * math.tan(self.steering_angle)
 
         self.publish_odom("odom", "base_footprint", self.x_curr_1Track, self.y_curr_1Track, self.quaternion_1Track, self.v_curr_1Track, self.w_curr_1Track, self.single_track_publisher)
 

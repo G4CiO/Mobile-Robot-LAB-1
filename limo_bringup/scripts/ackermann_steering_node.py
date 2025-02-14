@@ -23,26 +23,30 @@ class AckermannSteeringNode(Node):
         self.wheel_velo_pub = self.create_publisher(Float64MultiArray, '/velocity_controllers/commands', 10)
 
         # Vehicle Parameters
+        self.delta_steer = 0.0
+        self.v = 0.0
+        self.omega = 0.0
         self.declare_parameter('wheelbase', 0.2)   # meters
         self.declare_parameter('wheelradius', 0.045)   # meters
         self.declare_parameter('track_width', 0.14) # meters
         self.declare_parameter('steering_ratio', 1.0)
 
     def cmd_vel_callback(self, msg:Twist):
+        self.v = msg.linear.x
+        self.omega = msg.angular.z
         wheelbase = self.get_parameter('wheelbase').value
         track_width = self.get_parameter('track_width').value
         steering_ratio = self.get_parameter('steering_ratio').value
         wheelradius = self.get_parameter('wheelradius').value
 
-        v = msg.linear.x
-        angular_velo_wheel = v / wheelradius
-        omega = msg.angular.z
+        angular_velo_wheel = self.v / wheelradius
 
-        if omega == 0:
+        if self.omega == 0:
             delta_L = delta_R = 0.0  # Moving straight
+            self.delta_steer = 0.0
         else:
-            delta_ack = math.atan(wheelbase * omega / v) if v != 0 else 0
-            delta_ack /= steering_ratio
+            self.delta_steer = math.atan(wheelbase * self.omega / self.v) if self.v != 0 else 0
+            delta_ack = self.delta_steer / steering_ratio
 
             delta_L = math.atan((wheelbase * math.tan(delta_ack)) / (wheelbase - 0.5 * track_width * math.tan(delta_ack)))
             delta_R = math.atan((wheelbase * math.tan(delta_ack)) / (wheelbase + 0.5 * track_width * math.tan(delta_ack)))
@@ -50,15 +54,17 @@ class AckermannSteeringNode(Node):
         # Create JointTrajectory message
         trajectory = JointTrajectory()
         trajectory.header.frame_id = ''
-        trajectory.joint_names = ['left_steering_hinge_wheel', 'right_steering_hinge_wheel']
+        trajectory.joint_names = ['left_steering_hinge_wheel', 'right_steering_hinge_wheel', 'steering']
 
         # Create JointTrajectoryPoint for the steering angles
         point = JointTrajectoryPoint()
-        point.positions = [delta_L, delta_R]
-        point.velocities = [0.0, 0.0]  # Assuming zero velocities for now
-        point.accelerations = [0.0, 0.0]  # Assuming zero accelerations for now
-        point.time_from_start.sec = 1  # Adjust as needed
-        point.time_from_start.nanosec = 0
+        point.positions = [delta_L, delta_R, float(self.delta_steer)]
+        point.velocities = [0.0, 0.0, 0.0]  # Assuming zero velocities for now
+        point.accelerations = [0.0, 0.0, 0.0]  # Assuming zero accelerations for now
+        point.time_from_start.sec = 0  # Adjust as needed
+        second = 0.5
+        sec_to_nanosec = second * pow(10,9)
+        point.time_from_start.nanosec = int(sec_to_nanosec)
 
         # Create VelocityControllers for the wheel velocity
         wheel_velocity = Float64MultiArray()
