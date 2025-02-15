@@ -22,6 +22,7 @@ import os
 import xacro    
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch.substitutions import LaunchConfiguration
 
 # for display robot_state_publisher and fix something
     
@@ -29,6 +30,13 @@ def generate_launch_description():
     
     pkg_limo_gazebo = get_package_share_directory('limo_gazebo')
     pkg_limo_bringup = get_package_share_directory('limo_bringup')
+
+    # Declare launch argument for steering mode
+    steering_mode_arg = DeclareLaunchArgument(
+        'steering_mode',
+        default_value='ackermann',
+        description='Select steering mode: "ackermann" or "bicycle"'
+    )
 
     # launch sim gazebo
     sim = IncludeLaunchDescription(
@@ -43,16 +51,12 @@ def generate_launch_description():
         )
     )
 
-    ackermann_steering_node = Node(
+    # Steering model node with configurable steering mode
+    steering_model_node = Node(
         package="limo_bringup",
-        executable="ackermann_steering_node.py",
-        name="ackermann_steering_node"
-    )
-
-    bicycle_model_node = Node(
-        package="limo_bringup",
-        executable="bicycle_model_node.py",
-        name="bicycle_model_node"
+        executable="steering_model_node.py",
+        name="steering_model_node",
+        parameters=[{"steering_mode": LaunchConfiguration("steering_mode")}]
     )
 
     odometry_calculation = Node(
@@ -64,10 +68,9 @@ def generate_launch_description():
 
 
     launch_description = LaunchDescription()
-    
+    launch_description.add_action(steering_mode_arg)
     launch_description.add_action(sim)
-    launch_description.add_action(ackermann_steering_node)
-    # launch_description.add_action(bicycle_model_node)
+    launch_description.add_action(steering_model_node)
     launch_description.add_action(odometry_calculation)
     
     return launch_description

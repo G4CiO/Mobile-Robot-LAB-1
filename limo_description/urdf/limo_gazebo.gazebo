@@ -29,37 +29,34 @@
     </xacro:macro>
 
     <xacro:macro name="gazebo_laser" params="frame_prefix">
-        <gazebo reference="${frame_prefix}_link">
-            <sensor type="ray" name="laser_sensor">
-              <pose>0 0 0 0 0 0</pose>
-              <visualize>false</visualize>
+      <gazebo reference="${frame_prefix}_link">
+          <material>Gazebo/Red</material>
+          <sensor name="laser" type="ray">
+              <pose> 0 0 0 0 0 0 </pose>
+              <visualize>true</visualize>
               <update_rate>8</update_rate>
-              <ray>
-                <scan>
-                  <horizontal>
-                    <samples>720</samples>
-                    <resolution>1</resolution>
-                    <min_angle>-2.09439504</min_angle>
-                    <max_angle>2.09439504</max_angle>
-                  </horizontal>
-                </scan>
-                <range>
-                  <min>0.05</min>
-                  <max>8.0</max>
-                  <resolution>0.01</resolution>
-                </range>
-                <noise>
-                  <type>gaussian</type>
-                  <mean>0.0</mean>
-                  <stddev>0.01</stddev>
-                </noise>
+              <ray> 
+                  <scan>
+                      <horizontal>
+                          <samples>720</samples>
+                          <min_angle>-2.09439504</min_angle>
+                          <max_angle>2.09439504</max_angle>
+                      </horizontal>
+                  </scan>
+                  <range>
+                      <min>0.05</min>
+                      <max>8.0</max>
+                  </range>
               </ray>
-              <plugin name="gazebo_ros_laser_sensor" filename="libgazebo_ros_laser.so">
-                <topicName>/limo/scan</topicName>
-                <frameName>laser_link</frameName>
+              <plugin name="laser_controller" filename="libgazebo_ros_ray_sensor.so">
+                  <ros>
+                      <argument>~/out:=/limo/scan</argument>
+                  </ros>
+                  <output_type>sensor_msgs/LaserScan</output_type>
+                  <frame_name>laser_link</frame_name>
               </plugin>
-            </sensor>
-          </gazebo>
+          </sensor>
+      </gazebo>
     </xacro:macro>
 
     <xacro:macro name="gazebo_depth_camera" params="frame_prefix">
@@ -114,6 +111,33 @@
           </gazebo>
     </xacro:macro>
 
+    <xacro:macro name="gazebo_camera" params="frame_prefix">
+      <gazebo reference="${frame_prefix}_link">
+          <material>Gazebo/Red</material>
+
+          <sensor name="camera" type="camera">
+              <pose> 0 0 0 0 0 0 </pose>
+              <visualize>true</visualize>
+              <update_rate>10</update_rate>
+              <camera>
+                  <horizontal_fov>1.089</horizontal_fov>
+                  <image>
+                      <format>R8G8B8</format>
+                      <width>640</width>
+                      <height>480</height>
+                  </image>
+                  <clip>
+                      <near>0.02</near>
+                      <far>300</far>
+                  </clip>
+              </camera>
+              <plugin name="camera_controller" filename="libgazebo_ros_camera.so">
+                  <frame_name>depth_link</frame_name>
+              </plugin>
+          </sensor>
+      </gazebo>
+    </xacro:macro>
+
     <xacro:macro name="gazebo_imu" params="frame_prefix">
       <gazebo reference="${frame_prefix}_link">
         <gravity>true</gravity>
@@ -123,15 +147,72 @@
           <visualize>true</visualize>
           <topic>__default_topic__</topic>
           <plugin filename="libgazebo_ros_imu_sensor.so" name="imu_plugin">
-            <topicName>/limo/imu</topicName>
-            <bodyName>${frame_prefix}_link</bodyName>
+            <ros >
+                <remapping>/imu_plugin/out:=/limo/imu</remapping>
+            </ros>
+            <bodyName>imu_link</bodyName>
             <updateRateHZ>100.0</updateRateHZ>
             <gaussianNoise>0.001</gaussianNoise>
             <xyzOffset>0 0 0</xyzOffset>
             <rpyOffset>0 0 0</rpyOffset>
             <frameName>imu_link</frameName>
+            <initialOrientationAsReference>false</initialOrientationAsReference>
           </plugin>
           <pose>0 0 0 0 0 0</pose>
+          <imu>
+              <angular_velocity>
+                  <x>
+                  <noise type="gaussian">
+                      <mean>0.0</mean>
+                      <stddev>2e-4</stddev>
+                      <bias_mean>0.000000</bias_mean>
+                      <bias_stddev>0.0000000</bias_stddev>
+                  </noise>
+                  </x>
+                  <y>
+                  <noise type="gaussian">
+                      <mean>0.0</mean>
+                      <stddev>2e-4</stddev>
+                      <bias_mean>0.000000</bias_mean>
+                      <bias_stddev>0.0000000</bias_stddev>
+                  </noise>
+                  </y>
+                  <z>
+                  <noise type="gaussian">
+                      <mean>0.0</mean>
+                      <stddev>2e-4</stddev>
+                      <bias_mean>0.000000</bias_mean>
+                      <bias_stddev>0.0000000</bias_stddev>
+                  </noise>
+                  </z>
+              </angular_velocity>
+              <linear_acceleration>
+                  <x>
+                  <noise type="gaussian">
+                      <mean>0.0</mean>
+                      <stddev>1.7e-2</stddev>
+                      <bias_mean>0.0</bias_mean>
+                      <bias_stddev>0.000</bias_stddev>
+                  </noise>
+                  </x>
+                  <y>
+                  <noise type="gaussian">
+                      <mean>0.0</mean>
+                      <stddev>1.7e-2</stddev>
+                      <bias_mean>0.0</bias_mean>
+                      <bias_stddev>0.000</bias_stddev>
+                  </noise>
+                  </y>
+                  <z>
+                  <noise type="gaussian">
+                      <mean>0.0</mean>
+                      <stddev>1.7e-2</stddev>
+                      <bias_mean>0.0</bias_mean>
+                      <bias_stddev>0.000</bias_stddev>
+                  </noise>
+                  </z>
+              </linear_acceleration>
+              </imu>
         </sensor>
       </gazebo>
   </xacro:macro>

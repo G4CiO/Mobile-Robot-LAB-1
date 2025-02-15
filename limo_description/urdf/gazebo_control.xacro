@@ -4,8 +4,9 @@
     <xacro:include filename="$(find limo_description)/urdf/limo_gazebo.gazebo" />
 
     <!-- Controller configurations -->
-    <xacro:gazebo_laser frame_prefix="laser" />
-    <xacro:gazebo_depth_camera frame_prefix="depth_camera" />
+    <!-- <xacro:gazebo_laser frame_prefix="laser" /> -->
+    <!-- <xacro:gazebo_depth_camera frame_prefix="depth_camera" /> -->
+    <xacro:gazebo_camera frame_prefix="depth_camera" />
     <xacro:gazebo_imu frame_prefix="imu" />
 
     <gazebo>

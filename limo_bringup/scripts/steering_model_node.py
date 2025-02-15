@@ -5,14 +5,17 @@ import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Twist
 from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
-from std_msgs.msg import Float64MultiArray
 import math
+from sensor_msgs.msg import JointState
+from std_msgs.msg import Float64MultiArray
+import numpy as np
 
 
-class BicycleModelNode(Node):
+
+class SteeringModelNode(Node):
     def __init__(self):
-        super().__init__('bicycle_model_node')
-        self.get_logger().info("bicycle_model_node has been start.")
+        super().__init__('steering_model_node')
+        self.get_logger().info("steering_model_node has been start.")
         # Sub
         self.subscription = self.create_subscription(Twist, '/cmd_vel', self.cmd_vel_callback, 10)
         # Pub
@@ -21,23 +24,35 @@ class BicycleModelNode(Node):
 
         # Vehicle Parameters
         self.delta_steer = 0.0
-        self.declare_parameter('wheelbase', 1.0)  # meters
+        self.v = 0.0
+        self.omega = 0.0
+        self.declare_parameter('wheelbase', 0.2)   # meters
         self.declare_parameter('wheelradius', 0.045)   # meters
+        self.declare_parameter('track_width', 0.14) # meters
+        self.declare_parameter('steering_ratio', 1.0)
+        self.declare_parameter('steering_mode', 'ackermann')  # Options: "ackermann" or "bicycle"
 
     def cmd_vel_callback(self, msg:Twist):
+        self.v = msg.linear.x
+        self.omega = msg.angular.z
         wheelbase = self.get_parameter('wheelbase').value
+        track_width = self.get_parameter('track_width').value
+        steering_ratio = self.get_parameter('steering_ratio').value
         wheelradius = self.get_parameter('wheelradius').value
+        steering_mode = self.get_parameter('steering_mode').value  # Read mode parameter
 
-        v = msg.linear.x
-        angular_velo_wheel = v / wheelradius
-        omega = msg.angular.z
-        if omega == 0:
+        angular_velo_wheel = self.v / wheelradius
+
+        if self.omega == 0:
+            delta_L = delta_R = 0.0  # Moving straight
             self.delta_steer = 0.0
         else:
-            # delta = math.atan(wheelbase * omega / v) if v != 0 else 0
-            epsilon = 1e-6  # Small threshold to avoid division by zero
-            self.delta_steer = math.atan(wheelbase * omega / (v if abs(v) > epsilon else epsilon))
+            self.delta_steer = math.atan(wheelbase * self.omega / self.v) if self.v != 0 else 0
+            delta_ack = self.delta_steer / steering_ratio
 
+            delta_L = math.atan((wheelbase * math.tan(delta_ack)) / (wheelbase - 0.5 * track_width * math.tan(delta_ack)))
+            delta_R = math.atan((wheelbase * math.tan(delta_ack)) / (wheelbase + 0.5 * track_width * math.tan(delta_ack)))
+        
         # Create JointTrajectory message
         trajectory = JointTrajectory()
         trajectory.header.frame_id = ''
@@ -45,7 +60,16 @@ class BicycleModelNode(Node):
 
         # Create JointTrajectoryPoint for the steering angles
         point = JointTrajectoryPoint()
-        point.positions = [float(self.delta_steer), float(self.delta_steer), float(self.delta_steer)]
+        
+        # Select Steering Mode
+        if steering_mode == 'ackermann':
+            point.positions = [delta_L, delta_R, float(self.delta_steer)]  # Ackermann steering
+        elif steering_mode == 'bicycle':
+            point.positions = [float(self.delta_steer), float(self.delta_steer), float(self.delta_steer)]  # Bicycle model steering
+        else:
+            self.get_logger().warn("Invalid steering_mode parameter. Using Ackermann as default.")
+            point.positions = [delta_L, delta_R, float(self.delta_steer)]  # Default to Ackermann
+
         point.velocities = [0.0, 0.0, 0.0]  # Assuming zero velocities for now
         point.accelerations = [0.0, 0.0, 0.0]  # Assuming zero accelerations for now
         point.time_from_start.sec = 0  # Adjust as needed
@@ -68,7 +92,7 @@ class BicycleModelNode(Node):
 
 def main(args=None):
     rclpy.init(args=args)
-    node = BicycleModelNode()
+    node = SteeringModelNode()
     rclpy.spin(node)
     node.destroy_node()
     rclpy.shutdown()

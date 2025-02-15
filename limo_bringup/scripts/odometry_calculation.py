@@ -27,6 +27,10 @@ class OdometryCalcurationNode(Node):
         # State variables
         self.v_rl = 0.0
         self.v_rr = 0.0
+        self.delta = 0.0
+        self.v = 0.0
+        self.steering_angle = 0.0
+        self.BETA = 0.0  # Assuming no lateral slip
 
         self.x_curr = 0.0 # m
         self.y_curr = 0.0 # m
@@ -63,7 +67,6 @@ class OdometryCalcurationNode(Node):
         self.theta_prev_1Track = 0.0
         self.theta_curr_1Track = 0.0
 
-        self.BETA = 0.0  # Assuming no lateral slip
         # self.L_REAR_STEER_ANGLE = 0.0 # Left rear wheel steering angle (rad)
         # self.R_REAR_STEER_ANGLE = 0.0 # Right rear wheel steering angle (rad)
         # self.L_RX = -self.wheelbase/2  # Left rear wheel x-offset
@@ -71,11 +74,8 @@ class OdometryCalcurationNode(Node):
         # self.L_RY = self.track_width/2  # Left rear wheel y-offset 
         # self.R_RY = -self.track_width/2   # Right rear wheel y-offset 
 
-        self.delta = 0.0
-        self.v = 0.0
-
         # ROS 2 subscriptions
-        self.create_subscription(Imu, '/imu_plugin/out', self.imu_callback, 10)
+        self.create_subscription(Imu, '/limo/imu', self.imu_callback, 10)
         self.create_subscription(JointState, '/joint_states', self.jointstates_callback, 10)
 
         # ROS 2 publishers

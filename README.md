@@ -26,8 +26,14 @@
 
 # LAB 1.1 Kinematics of Mobile Robot
 1. Spawn robot in gazebo and publish three model of odometry.
+
+- Default (Ackermann):
     ```bash
     ros2 launch limo_bringup limo_bringup.launch.py
+    ```
+- Set to Bicycle Mode:
+    ```bash
+    ros2 launch limo_bringup limo_bringup.launch.py steering_mode:=bicycle
     ```
 2. Control robot by teleop_twist_keyboard in another terminal.
     ```
