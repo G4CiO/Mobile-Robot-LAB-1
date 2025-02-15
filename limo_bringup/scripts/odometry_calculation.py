@@ -10,10 +10,10 @@ import math
 import tf2_ros
 import tf_transformations
 
-class YawRateOdometryNode(Node):
+class OdometryCalcurationNode(Node):
     def __init__(self):
-        super().__init__('yaw_rate_odometry_node')
-        self.get_logger().info("yaw_rate_odometry_node has been start.")
+        super().__init__('odometry_calculation_node')
+        self.get_logger().info("odometry_calculation_node has been start.")
 
         # Vehicle Parameters
         self.declare_parameter('wheelbase', 0.2)   # meters
@@ -21,7 +21,7 @@ class YawRateOdometryNode(Node):
         self.declare_parameter('track_width', 0.14) # meters
         self.declare_parameter('steering_ratio', 1.0)
         self.wheelbase = self.get_parameter('wheelbase').value
-        track_width = self.get_parameter('track_width').value
+        self.track_width = self.get_parameter('track_width').value
         self.wheelradius = self.get_parameter('wheelradius').value
 
         # State variables
@@ -64,12 +64,12 @@ class YawRateOdometryNode(Node):
         self.theta_curr_1Track = 0.0
 
         self.BETA = 0.0  # Assuming no lateral slip
-        self.L_REAR_STEER_ANGLE = 0.0 # Left rear wheel steering angle (rad)
-        self.R_REAR_STEER_ANGLE = 0.0 # Right rear wheel steering angle (rad)
-        self.L_RX = -self.wheelbase/2  # Left rear wheel x-offset
-        self.R_RX = -self.wheelbase/2  # Right rear wheel x-offset 
-        self.L_RY = track_width/2  # Left rear wheel y-offset 
-        self.R_RY = -track_width/2   # Right rear wheel y-offset 
+        # self.L_REAR_STEER_ANGLE = 0.0 # Left rear wheel steering angle (rad)
+        # self.R_REAR_STEER_ANGLE = 0.0 # Right rear wheel steering angle (rad)
+        # self.L_RX = -self.wheelbase/2  # Left rear wheel x-offset
+        # self.R_RX = -self.wheelbase/2  # Right rear wheel x-offset 
+        # self.L_RY = self.track_width/2  # Left rear wheel y-offset 
+        # self.R_RY = -self.track_width/2   # Right rear wheel y-offset 
 
         self.delta = 0.0
         self.v = 0.0
@@ -153,23 +153,24 @@ class YawRateOdometryNode(Node):
         self.theta_curr_2Track = self.theta_prev_2Track + self.w_prev_2Track * self.dt
         self.quaternion_2Track = tf_transformations.quaternion_from_euler(0.0, 0.0, self.theta_curr_2Track)
 
-        A1 = self.L_RX * self.v_rr * math.sin(self.L_REAR_STEER_ANGLE)
-        A2 = self.L_RY * self.v_rr * math.cos(self.L_REAR_STEER_ANGLE)
-        A3 = self.R_RX * self.v_rl * math.sin(self.R_REAR_STEER_ANGLE)
-        A4 = self.R_RY * self.v_rl * math.cos(self.R_REAR_STEER_ANGLE)
+        # A1 = self.L_RX * self.v_rr * math.sin(self.L_REAR_STEER_ANGLE)
+        # A2 = self.L_RY * self.v_rr * math.cos(self.L_REAR_STEER_ANGLE)
+        # A3 = self.R_RX * self.v_rl * math.sin(self.R_REAR_STEER_ANGLE)
+        # A4 = self.R_RY * self.v_rl * math.cos(self.R_REAR_STEER_ANGLE)
 
-        B1 = self.L_RX * math.sin(self.L_REAR_STEER_ANGLE) * math.cos(self.R_REAR_STEER_ANGLE - self.BETA)
-        B2 = self.L_RY * math.cos(self.L_REAR_STEER_ANGLE) * math.cos(self.R_REAR_STEER_ANGLE - self.BETA)
-        B3 = self.R_RX * math.sin(self.R_REAR_STEER_ANGLE) * math.cos(self.L_REAR_STEER_ANGLE - self.BETA)
-        B4 = self.R_RY * math.cos(self.R_REAR_STEER_ANGLE) * math.cos(self.L_REAR_STEER_ANGLE - self.BETA)
+        # B1 = self.L_RX * math.sin(self.L_REAR_STEER_ANGLE) * math.cos(self.R_REAR_STEER_ANGLE - self.BETA)
+        # B2 = self.L_RY * math.cos(self.L_REAR_STEER_ANGLE) * math.cos(self.R_REAR_STEER_ANGLE - self.BETA)
+        # B3 = self.R_RX * math.sin(self.R_REAR_STEER_ANGLE) * math.cos(self.L_REAR_STEER_ANGLE - self.BETA)
+        # B4 = self.R_RY * math.cos(self.R_REAR_STEER_ANGLE) * math.cos(self.L_REAR_STEER_ANGLE - self.BETA)
 
-        C1 = self.v_rl * math.cos(self.R_REAR_STEER_ANGLE - self.BETA)
-        C2 = self.v_rr * math.cos(self.L_REAR_STEER_ANGLE - self.BETA)
+        # C1 = self.v_rl * math.cos(self.R_REAR_STEER_ANGLE - self.BETA)
+        # C2 = self.v_rr * math.cos(self.L_REAR_STEER_ANGLE - self.BETA)
 
-        self.v_curr_2Track = (A1 - A2 - A3 + A4) / (B1 - B2 - B3 + B4)
-        self.w_curr_2Track = (C1 - C2) / (B1 - B2 - B3 + B4)
-        # self.v_curr_2Track = (self.v_rl + self.v_rr) / 2
+        # self.v_curr_2Track = (A1 - A2 - A3 + A4) / (B1 - B2 - B3 + B4)
+        # self.w_curr_2Track = (C1 - C2) / (B1 - B2 - B3 + B4)
+        self.v_curr_2Track = (self.v_rl + self.v_rr) / 2
         # self.w_curr_2Track = (self.v_rr - self.v_rl) / (self.R_RY - self.L_RY)
+        self.w_curr_2Track = (self.v_rr - self.v_rl) / self.track_width
 
         # Publish odometry message
         self.publish_odom("odom", "base_footprint", self.x_curr_2Track, self.y_curr_2Track, self.quaternion_2Track, self.v_curr_2Track, self.w_curr_2Track, self.double_track_publisher)
@@ -230,7 +231,7 @@ class YawRateOdometryNode(Node):
 
 def main(args=None):
     rclpy.init(args=args)
-    node = YawRateOdometryNode()
+    node = OdometryCalcurationNode()
     rclpy.spin(node)
     node.destroy_node()
     rclpy.shutdown()
