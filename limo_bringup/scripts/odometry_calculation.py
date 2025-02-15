@@ -67,6 +67,10 @@ class OdometryCalcurationNode(Node):
         self.theta_prev_1Track = 0.0
         self.theta_curr_1Track = 0.0
 
+        self.x_gt = 0.0
+        self.y_gt = 0.0
+        self.quat_gt = []
+
         # self.L_REAR_STEER_ANGLE = 0.0 # Left rear wheel steering angle (rad)
         # self.R_REAR_STEER_ANGLE = 0.0 # Right rear wheel steering angle (rad)
         # self.L_RX = -self.wheelbase/2  # Left rear wheel x-offset
@@ -77,6 +81,7 @@ class OdometryCalcurationNode(Node):
         # ROS 2 subscriptions
         self.create_subscription(Imu, '/limo/imu', self.imu_callback, 10)
         self.create_subscription(JointState, '/joint_states', self.jointstates_callback, 10)
+        self.create_subscription(Odometry, '/odometry/ground_truth', self.OdoGroundTruth, 10)
 
         # ROS 2 publishers
         self.yaw_rate_publisher = self.create_publisher(Odometry, '/odometry/yaw_rate', 10)
@@ -106,7 +111,17 @@ class OdometryCalcurationNode(Node):
         self.Odo1Track()
         self.Odo2Track()
         # Publish TF transformation (odom -> base_footprint)
-        self.publish_tf()
+        # self.publish_tf(self.x_curr, self.y_curr, self.quaternion)
+        self.publish_tf(self.x_gt, self.y_gt, self.quat_gt)
+
+    def OdoGroundTruth(self, msg:Odometry):
+        self.x_gt = msg.pose.pose.position.x
+        self.y_gt = msg.pose.pose.position.y
+        quat_x = msg.pose.pose.orientation.x
+        quat_y = msg.pose.pose.orientation.y
+        quat_z = msg.pose.pose.orientation.z
+        quat_w = msg.pose.pose.orientation.w
+        self.quat_gt = [quat_x, quat_y, quat_z, quat_w]
 
     def OdoYawRate(self):
 
@@ -208,23 +223,27 @@ class OdometryCalcurationNode(Node):
         publisher.publish(odom_msg)    
 
 
-    def publish_tf(self):
+    def publish_tf(self, pose_x, pose_y, quaternion_list):
         """ Publishes the transformation from 'odom' to 'base_footprint' """
+
+        if len(quaternion_list) != 4:
+            return
+
         t = TransformStamped()
         t.header.stamp = self.get_clock().now().to_msg()
         t.header.frame_id = "odom"
         t.child_frame_id = "base_footprint"
 
         # Position
-        t.transform.translation.x = self.x_curr
-        t.transform.translation.y = self.y_curr
+        t.transform.translation.x = pose_x
+        t.transform.translation.y = pose_y
         t.transform.translation.z = 0.0
 
         # Orientation
-        t.transform.rotation.x = self.quaternion[0]
-        t.transform.rotation.y = self.quaternion[1]
-        t.transform.rotation.z = self.quaternion[2]
-        t.transform.rotation.w = self.quaternion[3]
+        t.transform.rotation.x = quaternion_list[0]
+        t.transform.rotation.y = quaternion_list[1]
+        t.transform.rotation.z = quaternion_list[2]
+        t.transform.rotation.w = quaternion_list[3]
 
         # Publish TF transform
         self.tf_broadcaster.sendTransform(t)

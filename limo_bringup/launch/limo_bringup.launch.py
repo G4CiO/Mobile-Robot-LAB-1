@@ -65,12 +65,10 @@ def generate_launch_description():
         name="odometry_calculation"
     )
 
-
-
     launch_description = LaunchDescription()
     launch_description.add_action(steering_mode_arg)
     launch_description.add_action(sim)
-    launch_description.add_action(steering_model_node)
+    # launch_description.add_action(steering_model_node)
     launch_description.add_action(odometry_calculation)
     
     return launch_description

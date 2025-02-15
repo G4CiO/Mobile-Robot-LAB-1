@@ -52,7 +52,7 @@ class SteeringModelNode(Node):
 
             delta_L = math.atan((wheelbase * math.tan(delta_ack)) / (wheelbase - 0.5 * track_width * math.tan(delta_ack)))
             delta_R = math.atan((wheelbase * math.tan(delta_ack)) / (wheelbase + 0.5 * track_width * math.tan(delta_ack)))
-        
+        print(f'steer angle : {self.delta_steer}')
         # Create JointTrajectory message
         trajectory = JointTrajectory()
         trajectory.header.frame_id = ''

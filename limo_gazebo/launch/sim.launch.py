@@ -76,13 +76,13 @@ def generate_launch_description():
         executable="spawn_entity.py",
         arguments=[
             "-topic", "robot_description",
-            "-entity", "limo_ackerman"
-            # '-x', '9.5',
+            "-entity", "limo_ackerman",
+            # '-x', '9.073496746393584',
             # '-y', '0.0',
             # '-z', '0.0',
             # '-R', '0.0',
             # '-P', '0.0',
-            # '-Y', '-1.57'
+            # '-Y', '1.5700039414375448'
         ],
         output = "screen"
     )
