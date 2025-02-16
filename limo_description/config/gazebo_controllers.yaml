@@ -11,6 +11,9 @@ controller_manager:
     velocity_controllers:
       type: velocity_controllers/JointGroupVelocityController
 
+    position_controller:
+      type: position_controllers/JointGroupPositionController
+
 joint_trajectory_controller:
   ros__parameters:
     use_sim_time: true
@@ -36,6 +39,13 @@ velocity_controllers:
     state_interface: 
       - velocity
       - effort
+
+position_controller:
+  ros__parameters:
+    joints:
+      - left_steering_hinge_wheel
+      - right_steering_hinge_wheel
+      - steering
 
     state_publish_rate: 50.0 # Defaults to 50
     action_monitor_rate: 20.0 # Defaults to 20

@@ -39,14 +39,14 @@ class ControllerServer(Node):
         ws_path, _ = path_pkg_share_path.split('install')
         file = self.get_parameter('file').value
         self.path_path = os.path.join(ws_path, 'src/Mobile-Robot-LAB-1', pkg_name, 'config', file)
-        
+
         # PID controllers for linear and angular velocities
-        self.linear_pid = PIDController(Kp=0.3, Ki=0.0, Kd=0.0)
+        self.linear_pid = PIDController(Kp=2.0, Ki=0.0, Kd=0.0)
         self.angular_pid = PIDController(Kp=2.0, Ki=0.0, Kd=0.0)
         self.thresold_distance_error = 0.30
 
         # Pure Puresuit controllers
-        self.lookahead_distance = 0.3
+        self.lookahead_distance = 0.8
         self.declare_parameter('wheelbase', 0.2)   # meters
 
         # Load path from YAML file
@@ -112,12 +112,12 @@ class ControllerServer(Node):
         wheelbase = self.get_parameter('wheelbase').value
 
         if self.current_target_idx >= len(self.path):
-            # self.current_target_idx = 0  # Reset index to loop the path
-            self.get_logger().info("Path tracking completed!")
-            return
+            self.current_target_idx = 0  # Reset index to loop the path
+            # self.get_logger().info("Path tracking completed!")
+            # return
         # Implement Here
         target = self.path[self.current_target_idx]
-        target_x, target_y = target['x'], target['y']
+        target_x, target_y, target_yaw = target['x'], target['y'], target['yaw']
 
         dx = target_x - self.robot_x
         dy = target_y - self.robot_y
@@ -128,30 +128,33 @@ class ControllerServer(Node):
             self.current_target_idx += 1
 
         # Heading Angle Calculation
-        target_angle = math.atan2(dy, dx)
-        alpha = target_angle - self.robot_yaw
-        # alpha = target_yaw - self.robot_yaw
-        
+        alpha = target_yaw - self.robot_yaw
+        # target_angle = math.atan2(dy, dx)
+        # alpha = target_angle - self.robot_yaw
+
         # Steering Angle Calculation (β)
         beta = math.atan(2 * wheelbase * math.sin(alpha) / self.lookahead_distance)
-        # beta = math.atan2(2 * wheelbase * math.sin(alpha) , self.lookahead_distance)
 
-        # linear_velocity = self.linear_pid.get_control(distance_error, self.dt)
-        linear_velocity = 0.2
+        linear_velocity = self.linear_pid.get_control(distance_error, self.dt)
         # Angular Velocity Calculation (ω)
         angular_velocity = (linear_velocity * math.tan(beta)) / wheelbase
-        print('////////////////////////////////////////////////////////////////////////')
-        print(f'target_x = {target_x}: {self.robot_x}')
-        print(f'target_y = {target_y}: {self.robot_y}')
-        print(f'distance: {distance_error} < lookahead_distance: {self.lookahead_distance}',f'index: {self.current_target_idx}')
-        print(f'Steering Angle: {beta}')
-        print(f'target_yaw = {target_angle}: {self.robot_yaw}')
-        print(f'yaw_error = {alpha}')
+
+        # Debug
+        # print('////////////////////////////////////////////////////////////////////////')
+        # print(f'target_x = {target_x}: {self.robot_x}')
+        # print(f'target_y = {target_y}: {self.robot_y}')
+        # print(f'distance: {distance_error} < lookahead_distance: {self.lookahead_distance}',f'index: {self.current_target_idx}')
+        # print(f'Steering Angle: {beta}')
+        # print(f'target_yaw = {target_yaw}: {self.robot_yaw}')
+        # print(f'yaw_error = {alpha}')
+
         # Publish cmd_vel
         msg = Twist()
         msg.linear.x = linear_velocity
         msg.angular.z = angular_velocity
         self.cmd_vel_pub.publish(msg)
+
+
 
 
 def main(args=None):

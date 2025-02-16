@@ -29,6 +29,7 @@ ament_python_install_package(${PROJECT_NAME})
 install(PROGRAMS
   scripts/dummy_script.py
   scripts/controller_server.py
+  scripts/path_publisher.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

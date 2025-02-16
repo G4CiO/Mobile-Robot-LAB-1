@@ -99,6 +99,12 @@ def generate_launch_description():
         arguments=["velocity_controllers", "--controller-manager", "/controller_manager"],
     )
 
+    position_controllers = Node(
+        package="controller_manager",
+        executable="spawner",
+        arguments=["position_controller", "--controller-manager", "/controller_manager"],
+    )
+
     joint_trajectory_controller = Node(
         package="controller_manager",
         executable="spawner",
@@ -121,7 +127,8 @@ def generate_launch_description():
     launch_description.add_action(spawn_entity)
     launch_description.add_action(joint_state_broadcaster_spawner)
     launch_description.add_action(velocity_controllers)
-    launch_description.add_action(joint_trajectory_controller)
+    # launch_description.add_action(joint_trajectory_controller)
+    launch_description.add_action(position_controllers)
     launch_description.add_action(static_tf)
 
     

@@ -10,8 +10,6 @@ from sensor_msgs.msg import JointState
 from std_msgs.msg import Float64MultiArray
 import numpy as np
 
-
-
 class SteeringModelNode(Node):
     def __init__(self):
         super().__init__('steering_model_node')
@@ -21,6 +19,7 @@ class SteeringModelNode(Node):
         # Pub
         self.wheel_angle_pub = self.create_publisher(JointTrajectory, '/joint_trajectory_controller/joint_trajectory', 10)
         self.wheel_velo_pub = self.create_publisher(Float64MultiArray, '/velocity_controllers/commands', 10)
+        self.wheel_pose_pub = self.create_publisher(Float64MultiArray, '/position_controller/commands', 10)
 
         # Vehicle Parameters
         self.delta_steer = 0.0
@@ -52,30 +51,18 @@ class SteeringModelNode(Node):
 
             delta_L = math.atan((wheelbase * math.tan(delta_ack)) / (wheelbase - 0.5 * track_width * math.tan(delta_ack)))
             delta_R = math.atan((wheelbase * math.tan(delta_ack)) / (wheelbase + 0.5 * track_width * math.tan(delta_ack)))
+        print('-------------------------------------------------------')
         print(f'steer angle : {self.delta_steer}')
-        # Create JointTrajectory message
-        trajectory = JointTrajectory()
-        trajectory.header.frame_id = ''
-        trajectory.joint_names = ['left_steering_hinge_wheel', 'right_steering_hinge_wheel', 'steering']
+        print(f'delta_L: {delta_L}, delta_R: {delta_R}')
 
-        # Create JointTrajectoryPoint for the steering angles
-        point = JointTrajectoryPoint()
-        
-        # Select Steering Mode
+        front_wheel_position = Float64MultiArray()
         if steering_mode == 'ackermann':
-            point.positions = [delta_L, delta_R, float(self.delta_steer)]  # Ackermann steering
+            front_wheel_position.data = [delta_L, delta_R, float(self.delta_steer)]
         elif steering_mode == 'bicycle':
-            point.positions = [float(self.delta_steer), float(self.delta_steer), float(self.delta_steer)]  # Bicycle model steering
+            front_wheel_position.data = [float(self.delta_steer), float(self.delta_steer), float(self.delta_steer)]
         else:
             self.get_logger().warn("Invalid steering_mode parameter. Using Ackermann as default.")
-            point.positions = [delta_L, delta_R, float(self.delta_steer)]  # Default to Ackermann
-
-        point.velocities = [0.0, 0.0, 0.0]  # Assuming zero velocities for now
-        point.accelerations = [0.0, 0.0, 0.0]  # Assuming zero accelerations for now
-        point.time_from_start.sec = 0  # Adjust as needed
-        second = 0.5
-        sec_to_nanosec = second * pow(10,9)
-        point.time_from_start.nanosec = int(sec_to_nanosec)
+            front_wheel_position.data = [delta_L, delta_R, float(self.delta_steer)] # Default to Ackermann
 
         # Create VelocityControllers for the wheel velocity
         wheel_velocity = Float64MultiArray()
@@ -84,11 +71,8 @@ class SteeringModelNode(Node):
         # Publish the wheel velocity
         self.wheel_velo_pub.publish(wheel_velocity)
 
-        # Add the point to the trajectory
-        trajectory.points = [point]
-
-        # Publish the trajectory
-        self.wheel_angle_pub.publish(trajectory)
+        # Publisg the front wheel position
+        self.wheel_pose_pub.publish(front_wheel_position)
 
 def main(args=None):
     rclpy.init(args=args)

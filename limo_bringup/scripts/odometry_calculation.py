@@ -2,13 +2,16 @@
 
 from limo_bringup.dummy_module import dummy_function, dummy_var
 import rclpy
+import math
+import tf2_ros
+import tf_transformations
 from rclpy.node import Node
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Twist, TransformStamped, Vector3
 from sensor_msgs.msg import Imu, JointState
-import math
-import tf2_ros
-import tf_transformations
+from nav_msgs.msg import Path
+from geometry_msgs.msg import PoseStamped, Pose, PoseWithCovariance
+
 
 class OdometryCalcurationNode(Node):
     def __init__(self):
@@ -87,6 +90,11 @@ class OdometryCalcurationNode(Node):
         self.yaw_rate_publisher = self.create_publisher(Odometry, '/odometry/yaw_rate', 10)
         self.single_track_publisher = self.create_publisher(Odometry, '/odometry/single_track', 10)
         self.double_track_publisher = self.create_publisher(Odometry, '/odometry/double_track', 10)
+        self.path_publisher = self.create_publisher(Path, '/limo/path', 10)
+
+        # Store path data
+        self.path_msg = Path()
+        self.path_msg.header.frame_id = "world"  # Change if using a different frame
         
         # TF broadcaster
         self.tf_broadcaster = tf2_ros.TransformBroadcaster(self)
@@ -94,6 +102,11 @@ class OdometryCalcurationNode(Node):
         # Timer to update odometry
         self.dt = 1/100
         self.create_timer(self.dt, self.update_odometry)
+
+    def update_robot_path(self, pose_stamped: PoseStamped):
+        self.path_msg.poses.append(pose_stamped)
+        self.path_msg.header.stamp = self.get_clock().now().to_msg()
+        self.path_publisher.publish(self.path_msg)
 
     def imu_callback(self, msg:Imu):
         """ Callback to get yaw rate from /imu_plugin/out topic """
@@ -122,6 +135,13 @@ class OdometryCalcurationNode(Node):
         quat_z = msg.pose.pose.orientation.z
         quat_w = msg.pose.pose.orientation.w
         self.quat_gt = [quat_x, quat_y, quat_z, quat_w]
+
+        # Convert Odometry pose to PoseStamped
+        pose_stamped = PoseStamped()
+        pose_stamped.header = msg.header
+        pose_stamped.pose = msg.pose.pose
+        # Update robot path
+        self.update_robot_path(pose_stamped)
 
     def OdoYawRate(self):
 

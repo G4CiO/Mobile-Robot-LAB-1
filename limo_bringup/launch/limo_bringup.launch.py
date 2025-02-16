@@ -65,10 +65,24 @@ def generate_launch_description():
         name="odometry_calculation"
     )
 
+    controller_server = Node(
+        package="limo_controller",
+        executable="controller_server.py",
+        name="controller_server"
+    )
+
+    path_publisher = Node(
+        package="limo_controller",
+        executable="path_publisher.py",
+        name="path_publisher"
+    )
+
     launch_description = LaunchDescription()
     launch_description.add_action(steering_mode_arg)
     launch_description.add_action(sim)
-    # launch_description.add_action(steering_model_node)
+    launch_description.add_action(steering_model_node)
     launch_description.add_action(odometry_calculation)
+    # launch_description.add_action(controller_server)
+    launch_description.add_action(path_publisher)
     
     return launch_description
