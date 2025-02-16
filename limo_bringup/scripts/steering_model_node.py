@@ -50,9 +50,6 @@ class SteeringModelNode(Node):
 
             delta_L = math.atan((wheelbase * math.tan(delta_ack)) / (wheelbase - 0.5 * track_width * math.tan(delta_ack)))
             delta_R = math.atan((wheelbase * math.tan(delta_ack)) / (wheelbase + 0.5 * track_width * math.tan(delta_ack)))
-        print('-------------------------------------------------------')
-        print(f'steer angle : {self.delta_steer}')
-        print(f'delta_L: {delta_L}, delta_R: {delta_R}')
 
         front_wheel_position = Float64MultiArray()
         if steering_mode == 'ackermann':

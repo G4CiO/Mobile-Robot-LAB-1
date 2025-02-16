@@ -90,10 +90,6 @@ class OdometryCalcurationNode(Node):
         self.yaw_rate_publisher = self.create_publisher(Odometry, '/odometry/yaw_rate', 10)
         self.single_track_publisher = self.create_publisher(Odometry, '/odometry/single_track', 10)
         self.double_track_publisher = self.create_publisher(Odometry, '/odometry/double_track', 10)
-        self.path_publisher = self.create_publisher(Path, '/limo/path', 10)
-
-        # Create Service for clearing the path
-        self.clear_path_service = self.create_service(Empty, 'clear_path', self.clear_path_callback)
 
         # Store path data
         self.path_msg = Path()
@@ -106,19 +102,6 @@ class OdometryCalcurationNode(Node):
         self.dt = 0.01
         self.create_timer(self.dt, self.update_odometry)
 
-    def clear_path_callback(self, request, response):
-        """ Callback to clear the robot path when the service is called """
-        self.get_logger().info("Clearing the robot path...")
-        self.path_msg.poses = []  # Reset path
-        self.path_msg.header.stamp = self.get_clock().now().to_msg()
-        self.path_publisher.publish(self.path_msg)  # Publish the cleared path
-        return response
-
-    def update_robot_path(self, pose_stamped: PoseStamped):
-        self.path_msg.poses.append(pose_stamped)
-        self.path_msg.header.stamp = self.get_clock().now().to_msg()
-        self.path_publisher.publish(self.path_msg)
-
     def imu_callback(self, msg:Imu):
         """ Callback to get yaw rate """
         self.yaw_rate = msg.angular_velocity.z  # Rotational velocity around Z-axis
@@ -128,19 +111,20 @@ class OdometryCalcurationNode(Node):
         self.steering_angle = msg.position[4]
         self.v_rl = msg.velocity[0] * self.wheelradius
         self.v_rr = msg.velocity[1] * self.wheelradius
-        print(f'w_rl: {msg.velocity[0]}, w_rr: {msg.velocity[1]}')
-        print(f'v_rl: {self.v_rl}, v_rr: {self.v_rr}')
 
     def update_odometry(self):
         # Publish Odom (odom -> base_footprint)
         self.OdoYawRate()
         self.Odo1Track()
         self.Odo2Track()
+        
         # Publish TF transformation (odom -> base_footprint)
-        self.publish_tf(self.x_curr, self.y_curr, self.quaternion)
-        # self.publish_tf(self.x_gt, self.y_gt, self.quat_gt)
+        # self.publish_tf(self.x_curr, self.y_curr, self.quaternion)
+        self.publish_tf(self.x_gt, self.y_gt, self.quat_gt)
 
     def OdoGroundTruth(self, msg:Odometry):
+        self.header_gt = msg.header
+        self.pose_gt = msg.pose.pose
         self.x_gt = msg.pose.pose.position.x
         self.y_gt = msg.pose.pose.position.y
         quat_x = msg.pose.pose.orientation.x
@@ -149,15 +133,7 @@ class OdometryCalcurationNode(Node):
         quat_w = msg.pose.pose.orientation.w
         self.quat_gt = [quat_x, quat_y, quat_z, quat_w]
 
-        # Convert Odometry pose to PoseStamped
-        pose_stamped = PoseStamped()
-        pose_stamped.header = msg.header
-        pose_stamped.pose = msg.pose.pose
-        # Update robot path
-        self.update_robot_path(pose_stamped)
-
     def OdoYawRate(self):
-
         # Compute new pose        
         self.x_curr = self.x_prev + self.v_prev * self.dt * math.cos(self.theta_prev + self.BETA + ((self.w_prev * self.dt) / 2))
         self.y_curr = self.y_prev + self.v_prev * self.dt * math.sin(self.theta_prev + self.BETA + ((self.w_prev * self.dt) / 2))
@@ -175,15 +151,8 @@ class OdometryCalcurationNode(Node):
         self.v_prev = self.v_curr
         self.w_prev = self.w_curr
         self.theta_prev = self.theta_curr
-        print('----------------------------------')
-        print(f'x_curr: {self.x_curr}')
-        print(f'y_curr: {self.y_curr}')
-        print(f'theta_curr: {self.theta_curr}')
-        print(f'v_curr: {self.v_curr}')
-        print(f'w_curr: {self.w_curr}')
 
     def Odo1Track(self):
-        
         self.x_curr_1Track = self.x_prev_1Track + self.v_prev_1Track * self.dt * math.cos(self.theta_prev_1Track + self.BETA + ((self.w_prev_1Track * self.dt) / 2))
         self.y_curr_1Track = self.y_prev_1Track + self.v_prev_1Track * self.dt * math.sin(self.theta_prev_1Track + self.BETA + ((self.w_prev_1Track * self.dt) / 2))
         self.theta_curr_1Track = self.theta_prev_1Track + self.w_prev_1Track * self.dt
@@ -201,7 +170,6 @@ class OdometryCalcurationNode(Node):
         self.theta_prev_1Track = self.theta_curr_1Track
 
     def Odo2Track(self):
-
         self.x_curr_2Track = self.x_prev_2Track + self.v_prev_2Track * self.dt * math.cos(self.theta_prev_2Track + self.BETA + ((self.w_prev_2Track * self.dt) / 2))
         self.y_curr_2Track = self.y_prev_2Track + self.v_prev_2Track * self.dt * math.sin(self.theta_prev_2Track + self.BETA + ((self.w_prev_2Track * self.dt) / 2))
         self.theta_curr_2Track = self.theta_prev_2Track + self.w_prev_2Track * self.dt
