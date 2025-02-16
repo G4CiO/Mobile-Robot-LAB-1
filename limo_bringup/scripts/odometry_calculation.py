@@ -10,8 +10,8 @@ from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Twist, TransformStamped, Vector3
 from sensor_msgs.msg import Imu, JointState
 from nav_msgs.msg import Path
-from geometry_msgs.msg import PoseStamped, Pose, PoseWithCovariance
-
+from geometry_msgs.msg import PoseStamped
+from std_srvs.srv import Empty
 
 class OdometryCalcurationNode(Node):
     def __init__(self):
@@ -92,6 +92,9 @@ class OdometryCalcurationNode(Node):
         self.double_track_publisher = self.create_publisher(Odometry, '/odometry/double_track', 10)
         self.path_publisher = self.create_publisher(Path, '/limo/path', 10)
 
+        # Create Service for clearing the path
+        self.clear_path_service = self.create_service(Empty, 'clear_path', self.clear_path_callback)
+
         # Store path data
         self.path_msg = Path()
         self.path_msg.header.frame_id = "world"  # Change if using a different frame
@@ -102,6 +105,14 @@ class OdometryCalcurationNode(Node):
         # Timer to update odometry
         self.dt = 1/100
         self.create_timer(self.dt, self.update_odometry)
+
+    def clear_path_callback(self, request, response):
+        """ Callback to clear the robot path when the service is called """
+        self.get_logger().info("Clearing the robot path...")
+        self.path_msg.poses = []  # Reset path
+        self.path_msg.header.stamp = self.get_clock().now().to_msg()
+        self.path_publisher.publish(self.path_msg)  # Publish the cleared path
+        return response
 
     def update_robot_path(self, pose_stamped: PoseStamped):
         self.path_msg.poses.append(pose_stamped)

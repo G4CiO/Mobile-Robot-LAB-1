@@ -39,3 +39,12 @@
     ```
     ros2 run teleop_twist_keyboard teleop_twist_keyboard
     ```
+# LAB 1.2 Path Tracking Controller
+- Run controller server
+    ```bash
+    ros2 run limo_controller controller_server.py
+    ```
+- Clear path of robot
+    ```bash
+    ros2 service call /clear_path std_srvs/srv/Empty
+    ```
