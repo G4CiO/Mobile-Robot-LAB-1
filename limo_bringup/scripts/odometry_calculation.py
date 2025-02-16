@@ -103,7 +103,7 @@ class OdometryCalcurationNode(Node):
         self.tf_broadcaster = tf2_ros.TransformBroadcaster(self)
 
         # Timer to update odometry
-        self.dt = 1/100
+        self.dt = 0.01
         self.create_timer(self.dt, self.update_odometry)
 
     def clear_path_callback(self, request, response):
@@ -120,7 +120,7 @@ class OdometryCalcurationNode(Node):
         self.path_publisher.publish(self.path_msg)
 
     def imu_callback(self, msg:Imu):
-        """ Callback to get yaw rate from /imu_plugin/out topic """
+        """ Callback to get yaw rate """
         self.yaw_rate = msg.angular_velocity.z  # Rotational velocity around Z-axis
 
     def jointstates_callback(self, msg:JointState):
@@ -128,6 +128,8 @@ class OdometryCalcurationNode(Node):
         self.steering_angle = msg.position[4]
         self.v_rl = msg.velocity[0] * self.wheelradius
         self.v_rr = msg.velocity[1] * self.wheelradius
+        print(f'w_rl: {msg.velocity[0]}, w_rr: {msg.velocity[1]}')
+        print(f'v_rl: {self.v_rl}, v_rr: {self.v_rr}')
 
     def update_odometry(self):
         # Publish Odom (odom -> base_footprint)
@@ -135,8 +137,8 @@ class OdometryCalcurationNode(Node):
         self.Odo1Track()
         self.Odo2Track()
         # Publish TF transformation (odom -> base_footprint)
-        # self.publish_tf(self.x_curr, self.y_curr, self.quaternion)
-        self.publish_tf(self.x_gt, self.y_gt, self.quat_gt)
+        self.publish_tf(self.x_curr, self.y_curr, self.quaternion)
+        # self.publish_tf(self.x_gt, self.y_gt, self.quat_gt)
 
     def OdoGroundTruth(self, msg:Odometry):
         self.x_gt = msg.pose.pose.position.x
@@ -173,6 +175,12 @@ class OdometryCalcurationNode(Node):
         self.v_prev = self.v_curr
         self.w_prev = self.w_curr
         self.theta_prev = self.theta_curr
+        print('----------------------------------')
+        print(f'x_curr: {self.x_curr}')
+        print(f'y_curr: {self.y_curr}')
+        print(f'theta_curr: {self.theta_curr}')
+        print(f'v_curr: {self.v_curr}')
+        print(f'w_curr: {self.w_curr}')
 
     def Odo1Track(self):
         

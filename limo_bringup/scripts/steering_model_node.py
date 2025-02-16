@@ -17,7 +17,6 @@ class SteeringModelNode(Node):
         # Sub
         self.subscription = self.create_subscription(Twist, '/cmd_vel', self.cmd_vel_callback, 10)
         # Pub
-        self.wheel_angle_pub = self.create_publisher(JointTrajectory, '/joint_trajectory_controller/joint_trajectory', 10)
         self.wheel_velo_pub = self.create_publisher(Float64MultiArray, '/velocity_controllers/commands', 10)
         self.wheel_pose_pub = self.create_publisher(Float64MultiArray, '/position_controller/commands', 10)
 

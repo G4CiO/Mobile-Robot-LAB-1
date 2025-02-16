@@ -133,7 +133,7 @@ class ControllerServer(Node):
         # alpha = target_angle - self.robot_yaw
 
         # Steering Angle Calculation (β)
-        beta = math.atan(2 * wheelbase * math.sin(alpha) / self.lookahead_distance)
+        beta = math.atan2(2 * wheelbase * math.sin(alpha) / self.lookahead_distance, 1.0)
 
         linear_velocity = self.linear_pid.get_control(distance_error, self.dt)
         # Angular Velocity Calculation (ω)
