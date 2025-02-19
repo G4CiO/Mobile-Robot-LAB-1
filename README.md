@@ -27,11 +27,11 @@
 # LAB 1.1 Kinematics of Mobile Robot
 1. Spawn robot in gazebo and publish three model of odometry.
 
-- Default (Ackermann):
+- Set to **Ackermann** Mode (Default):
     ```bash
-    ros2 launch limo_bringup limo_bringup.launch.py
+    ros2 launch limo_bringup limo_bringup.launch.py steering_mode:=ackermann
     ```
-- Set to Bicycle Mode:
+- Set to **Bicycle** Mode:
     ```bash
     ros2 launch limo_bringup limo_bringup.launch.py steering_mode:=bicycle
     ```
@@ -40,9 +40,15 @@
     ros2 run teleop_twist_keyboard teleop_twist_keyboard
     ```
 # LAB 1.2 Path Tracking Controller
-- Run controller server
+First *Spawn robot* by command from LAB 1.1 then
+1. Run controller server
+- Set to **Pure Pursuit** Mode (Default)
     ```bash
-    ros2 run limo_controller controller_server.py
+    ros2 run limo_controller controller_server.py --ros-args -p control_mode:=pure_pursuit
+    ```
+- Set to **PID** Mode
+    ```
+    ros2 run limo_controller controller_server.py --ros-args -p control_mode:=pid
     ```
 - Clear path of robot
     ```bash

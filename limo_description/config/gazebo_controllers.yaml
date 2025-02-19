@@ -20,7 +20,6 @@ joint_trajectory_controller:
     joints:
       - left_steering_hinge_wheel
       - right_steering_hinge_wheel
-      - steering
     interface_name: position
     command_interfaces:
       - position
@@ -45,7 +44,6 @@ position_controller:
     joints:
       - left_steering_hinge_wheel
       - right_steering_hinge_wheel
-      - steering
 
     state_publish_rate: 50.0 # Defaults to 50
     action_monitor_rate: 20.0 # Defaults to 20

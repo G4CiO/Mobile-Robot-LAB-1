@@ -26,13 +26,14 @@ class OdometryCalcurationNode(Node):
         self.wheelbase = self.get_parameter('wheelbase').value
         self.track_width = self.get_parameter('track_width').value
         self.wheelradius = self.get_parameter('wheelradius').value
+        self.steering_ratio = self.get_parameter('steering_ratio').value
 
         # State variables
         self.v_rl = 0.0
         self.v_rr = 0.0
-        self.delta = 0.0
+        self.delta_L = 0.0
+        self.delta_R = 0.0
         self.v = 0.0
-        self.steering_angle = 0.0
         self.BETA = 0.0  # Assuming no lateral slip
 
         self.x_curr = 0.0 # m
@@ -107,10 +108,18 @@ class OdometryCalcurationNode(Node):
         self.yaw_rate = msg.angular_velocity.z  # Rotational velocity around Z-axis
 
     def jointstates_callback(self, msg:JointState):
-        """ Callback to get JointState from /jointstates topic """
-        self.steering_angle = msg.position[4]
+        """ Callback to get JointState from /joint_states topic """
         self.v_rl = msg.velocity[0] * self.wheelradius
         self.v_rr = msg.velocity[1] * self.wheelradius
+        self.delta_L = msg.position[2]
+        self.delta_R = msg.position[3]
+
+    def delta_steering(self, delta_L, delta_R, wheelbase, track_width, steering_ratio):
+        delta_ack_L = math.atan((wheelbase * math.tan(delta_L)) / (wheelbase - 0.5 * track_width * math.tan(delta_L)))
+        delta_ack_R = math.atan((wheelbase * math.tan(delta_R)) / (wheelbase + 0.5 * track_width * math.tan(delta_R)))
+        delta_ack = (delta_ack_L + delta_ack_R) / 2
+        delta_steer = delta_ack * steering_ratio
+        return delta_steer
 
     def update_odometry(self):
         # Publish Odom (odom -> base_footprint)
@@ -153,12 +162,13 @@ class OdometryCalcurationNode(Node):
         self.theta_prev = self.theta_curr
 
     def Odo1Track(self):
+        delta_steer = self.delta_steering(self.delta_L, self.delta_R, self.wheelbase, self.track_width, self.steering_ratio)
         self.x_curr_1Track = self.x_prev_1Track + self.v_prev_1Track * self.dt * math.cos(self.theta_prev_1Track + self.BETA + ((self.w_prev_1Track * self.dt) / 2))
         self.y_curr_1Track = self.y_prev_1Track + self.v_prev_1Track * self.dt * math.sin(self.theta_prev_1Track + self.BETA + ((self.w_prev_1Track * self.dt) / 2))
         self.theta_curr_1Track = self.theta_prev_1Track + self.w_prev_1Track * self.dt
         self.quaternion_1Track = tf_transformations.quaternion_from_euler(0.0, 0.0, self.theta_curr_1Track)
         self.v_curr_1Track = (self.v_rl + self.v_rr) / 2
-        self.w_curr_1Track = (self.v_prev_1Track / self.wheelbase) * math.tan(self.steering_angle)
+        self.w_curr_1Track = (self.v_prev_1Track / self.wheelbase) * math.tan(delta_steer)
 
         self.publish_odom("odom", "base_footprint", self.x_curr_1Track, self.y_curr_1Track, self.quaternion_1Track, self.v_curr_1Track, self.w_curr_1Track, self.single_track_publisher)
 
