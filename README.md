@@ -50,6 +50,10 @@ First *Spawn robot* by command from LAB 1.1 then
     ```
     ros2 run limo_controller controller_server.py --ros-args -p control_mode:=pid
     ```
+- Set to **Stanley** Mode
+    ```
+    ros2 run limo_controller controller_server.py --ros-args -p control_mode:=stanley
+    ```
 - Clear path of robot
     ```bash
     ros2 service call /clear_path std_srvs/srv/Empty
