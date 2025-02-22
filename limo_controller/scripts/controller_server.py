@@ -6,16 +6,11 @@ import os
 import yaml
 import math
 import numpy as np
-import cvxpy as cp
-import signal
-import sys
 from rclpy.node import Node
 from geometry_msgs.msg import Twist
 from nav_msgs.msg import Odometry
 from ament_index_python import get_package_share_directory
 from tf_transformations import euler_from_quaternion
-from angle import angle_mod
-
 
 class PIDController:
     def __init__(self, Kp, Ki, Kd):
@@ -69,7 +64,7 @@ class ControllerServer(Node):
 
         # Stanley controllers
         self.k = 1.0
-        self.ks = 2.5
+        self.ks = 2.5 # Softening constant (ks) = If increase ks, It will decrease swing in steering wheel when at low speed
         self.target_speed = 1.0
         self.linear_speed_stan = PIDController(Kp=70, Ki=0.0, Kd=0.0)
 
@@ -120,21 +115,25 @@ class ControllerServer(Node):
             self.current_target_idx = 0  # Reset index to loop the path
 
         # Search nearest point index
-        # if self.state == 0:
-        #     dx = [self.robot_x - target_x['x'] for target_x in self.path]
-        #     dy = [self.robot_y - target_y['y'] for target_y in self.path]
-        #     d = np.hypot(dx, dy)
-        #     self.current_target_idx = np.argmin(d) + 50
-        #     self.state = 1
+        if self.state == 0:
+            dx = [self.robot_x - target_x['x'] for target_x in self.path]
+            dy = [self.robot_y - target_y['y'] for target_y in self.path]
+            d = np.hypot(dx, dy)
+            self.current_target_idx = np.argmin(d)
+            self.state = 1
         
         target = self.path[self.current_target_idx]
-        target_x, target_y, target_yaw = target['x'], target['y'], target['yaw']
+        target_x, target_y = target['x'], target['y']
         
         # Compute errors
         dx = target_x - self.robot_x
         dy = target_y - self.robot_y
         distance_error = math.hypot(dx, dy)
+        
+        target_yaw = math.atan2(dy,dx)
         yaw_error = target_yaw - self.robot_yaw
+        # Normalize an angle to [-pi, pi]
+        yaw_error = math.atan2(math.sin(yaw_error), math.cos(yaw_error))
 
         # Check if the target is reached
         if distance_error < self.thresold_distance_error:
@@ -220,8 +219,6 @@ class ControllerServer(Node):
         e_fa = np.dot([dx[self.current_target_idx], dy[self.current_target_idx]], front_axle_vec)
         
         # Compute heading error
-        # theta_e = self.normalize_angle(target['yaw'] - self.robot_yaw)
-        # theta_e = self.normalize(target['yaw'] - self.robot_yaw)
         theta_e = target['yaw'] - self.robot_yaw
         # Normalize an angle to [-pi, pi]
         theta_e = np.arctan2(np.sin(theta_e),np.cos(theta_e))
@@ -275,7 +272,6 @@ def main(args=None):
         cmd.angular.z = 0.0
         node.cmd_vel_pub.publish(cmd)
         node.get_logger().info("Published zero cmd_vel before shutdown.")
-        
         node.destroy_node()
         rclpy.shutdown()
 
