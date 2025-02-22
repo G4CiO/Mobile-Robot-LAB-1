@@ -132,11 +132,6 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
           Value: true
-        steer_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
       Mass Properties:
         Inertia: false
         Mass: false
@@ -173,8 +168,6 @@ Visualization Manager:
         rear_right_wheel_link:
           Value: true
         right_steering_hinge:
-          Value: true
-        steer_link:
           Value: true
         world:
           Value: true
@@ -217,7 +210,7 @@ Visualization Manager:
           Value: true
         Value: true
       Enabled: true
-      Keep: 100
+      Keep: 1
       Name: Yaw Rate
       Position Tolerance: 0.10000000149011612
       Shape:
@@ -256,7 +249,7 @@ Visualization Manager:
           Value: true
         Value: true
       Enabled: true
-      Keep: 100
+      Keep: 1
       Name: Single Track
       Position Tolerance: 0.10000000149011612
       Shape:
@@ -295,7 +288,7 @@ Visualization Manager:
           Value: true
         Value: true
       Enabled: true
-      Keep: 100
+      Keep: 1
       Name: Double Track
       Position Tolerance: 0.10000000149011612
       Shape:
@@ -334,7 +327,7 @@ Visualization Manager:
           Value: true
         Value: true
       Enabled: true
-      Keep: 100
+      Keep: 1
       Name: Ground Truth
       Position Tolerance: 0.10000000149011612
       Shape:

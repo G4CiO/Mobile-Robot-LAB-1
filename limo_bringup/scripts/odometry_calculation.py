@@ -12,6 +12,7 @@ from sensor_msgs.msg import Imu, JointState
 from nav_msgs.msg import Path
 from geometry_msgs.msg import PoseStamped
 from std_srvs.srv import Empty
+from tf2_ros.static_transform_broadcaster import StaticTransformBroadcaster
 
 class OdometryCalcurationNode(Node):
     def __init__(self):
@@ -97,7 +98,8 @@ class OdometryCalcurationNode(Node):
         self.path_msg.header.frame_id = "world"  # Change if using a different frame
         
         # TF broadcaster
-        self.tf_broadcaster = tf2_ros.TransformBroadcaster(self)
+        # self.tf_broadcaster = tf2_ros.TransformBroadcaster(self)
+        self.tf_static_broadcaster = StaticTransformBroadcaster(self)
 
         # Timer to update odometry
         self.dt = 0.01
@@ -162,7 +164,12 @@ class OdometryCalcurationNode(Node):
         self.theta_prev = self.theta_curr
 
     def Odo1Track(self):
-        delta_steer = self.delta_steering(self.delta_L, self.delta_R, self.wheelbase, self.track_width, self.steering_ratio)
+        # delta_steer = self.delta_steering(self.delta_L, self.delta_R, self.wheelbase, self.track_width, self.steering_ratio)
+        if (math.tan(self.delta_R)+math.tan(self.delta_L)) != 0:
+            delta_steer = math.atan((2*math.tan(self.delta_L)*math.tan(self.delta_R))/(math.tan(self.delta_R)+math.tan(self.delta_L)))
+        else:
+            delta_steer = 0.0
+
         self.x_curr_1Track = self.x_prev_1Track + self.v_prev_1Track * self.dt * math.cos(self.theta_prev_1Track + self.BETA + ((self.w_prev_1Track * self.dt) / 2))
         self.y_curr_1Track = self.y_prev_1Track + self.v_prev_1Track * self.dt * math.sin(self.theta_prev_1Track + self.BETA + ((self.w_prev_1Track * self.dt) / 2))
         self.theta_curr_1Track = self.theta_prev_1Track + self.w_prev_1Track * self.dt
@@ -170,6 +177,7 @@ class OdometryCalcurationNode(Node):
         self.v_curr_1Track = (self.v_rl + self.v_rr) / 2
         self.w_curr_1Track = (self.v_prev_1Track / self.wheelbase) * math.tan(delta_steer)
 
+        # Publish odometry message
         self.publish_odom("odom", "base_footprint", self.x_curr_1Track, self.y_curr_1Track, self.quaternion_1Track, self.v_curr_1Track, self.w_curr_1Track, self.single_track_publisher)
 
         # Update state
@@ -184,24 +192,7 @@ class OdometryCalcurationNode(Node):
         self.y_curr_2Track = self.y_prev_2Track + self.v_prev_2Track * self.dt * math.sin(self.theta_prev_2Track + self.BETA + ((self.w_prev_2Track * self.dt) / 2))
         self.theta_curr_2Track = self.theta_prev_2Track + self.w_prev_2Track * self.dt
         self.quaternion_2Track = tf_transformations.quaternion_from_euler(0.0, 0.0, self.theta_curr_2Track)
-
-        # A1 = self.L_RX * self.v_rr * math.sin(self.L_REAR_STEER_ANGLE)
-        # A2 = self.L_RY * self.v_rr * math.cos(self.L_REAR_STEER_ANGLE)
-        # A3 = self.R_RX * self.v_rl * math.sin(self.R_REAR_STEER_ANGLE)
-        # A4 = self.R_RY * self.v_rl * math.cos(self.R_REAR_STEER_ANGLE)
-
-        # B1 = self.L_RX * math.sin(self.L_REAR_STEER_ANGLE) * math.cos(self.R_REAR_STEER_ANGLE - self.BETA)
-        # B2 = self.L_RY * math.cos(self.L_REAR_STEER_ANGLE) * math.cos(self.R_REAR_STEER_ANGLE - self.BETA)
-        # B3 = self.R_RX * math.sin(self.R_REAR_STEER_ANGLE) * math.cos(self.L_REAR_STEER_ANGLE - self.BETA)
-        # B4 = self.R_RY * math.cos(self.R_REAR_STEER_ANGLE) * math.cos(self.L_REAR_STEER_ANGLE - self.BETA)
-
-        # C1 = self.v_rl * math.cos(self.R_REAR_STEER_ANGLE - self.BETA)
-        # C2 = self.v_rr * math.cos(self.L_REAR_STEER_ANGLE - self.BETA)
-
-        # self.v_curr_2Track = (A1 - A2 - A3 + A4) / (B1 - B2 - B3 + B4)
-        # self.w_curr_2Track = (C1 - C2) / (B1 - B2 - B3 + B4)
         self.v_curr_2Track = (self.v_rl + self.v_rr) / 2
-        # self.w_curr_2Track = (self.v_rr - self.v_rl) / (self.R_RY - self.L_RY)
         self.w_curr_2Track = (self.v_rr - self.v_rl) / self.track_width
 
         # Publish odometry message
@@ -263,7 +254,8 @@ class OdometryCalcurationNode(Node):
         t.transform.rotation.w = quaternion_list[3]
 
         # Publish TF transform
-        self.tf_broadcaster.sendTransform(t)
+        # self.tf_broadcaster.sendTransform(t)
+        self.tf_static_broadcaster.sendTransform(t)
 
 def main(args=None):
     rclpy.init(args=args)

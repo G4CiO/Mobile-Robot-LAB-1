@@ -53,7 +53,7 @@ class PathPublisher(Node):
 
     def update_robot_path(self):
         if self.header_gt is None or self.pose_gt is None:
-            self.get_logger().warn("Odometry data not received yet, skipping path update.")
+            # self.get_logger().warn("Odometry data not received yet, skipping path update.")
             return
         # Convert Odometry pose to PoseStamped
         pose_stamped = PoseStamped()

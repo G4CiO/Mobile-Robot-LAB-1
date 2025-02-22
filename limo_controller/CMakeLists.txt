@@ -30,6 +30,9 @@ install(PROGRAMS
   scripts/dummy_script.py
   scripts/controller_server.py
   scripts/path_publisher.py
+  scripts/mpc.py
+  scripts/cubic_spline_planner.py
+  scripts/angle.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
@@ -51,6 +54,8 @@ install(TARGETS
 install(DIRECTORY
   # add directories here
   config
+  CubicSpline
+  utils
   DESTINATION share/${PROJECT_NAME})
 
 ament_package()
