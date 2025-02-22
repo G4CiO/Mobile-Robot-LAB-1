@@ -37,6 +37,12 @@ def generate_launch_description():
         default_value='ackermann',
         description='Select steering mode: "ackermann" or "bicycle"'
     )
+    # Declare launch argument for steering mode
+    control_mode_arg = DeclareLaunchArgument(
+        'control_mode',
+        default_value='pure_pursuit',
+        description='Select control mode: "pid" , "pure_pursuit" or "stanley"'
+    )
 
     # launch sim gazebo
     sim = IncludeLaunchDescription(
@@ -68,7 +74,8 @@ def generate_launch_description():
     controller_server = Node(
         package="limo_controller",
         executable="controller_server.py",
-        name="controller_server"
+        name="controller_server",
+        parameters=[{"control_mode": LaunchConfiguration("control_mode")}]
     )
 
     path_publisher = Node(
@@ -79,6 +86,7 @@ def generate_launch_description():
 
     launch_description = LaunchDescription()
     launch_description.add_action(steering_mode_arg)
+    launch_description.add_action(control_mode_arg)
     launch_description.add_action(sim)
     launch_description.add_action(steering_model_node)
     launch_description.add_action(odometry_calculation)
