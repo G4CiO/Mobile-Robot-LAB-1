@@ -25,6 +25,7 @@
     ```
 
 # LAB 1.1 Kinematics of Mobile Robot
+## Implementation
 1. Spawn robot in gazebo and publish three model of odometry.
 
 - Set to **Ackermann** Mode (Default):
@@ -39,6 +40,43 @@
     ```
     ros2 run teleop_twist_keyboard teleop_twist_keyboard
     ```
+## Varidation
+1. Basic model VS Single Track
+
+    - Pros
+
+    - Cons
+
+2. Basic model VS Double Track
+
+    - Pros
+
+    - Cons
+
+3. Basic model VS Yaw rate
+
+    - Pros
+
+    - Cons
+
+4. No-slip VS Single Track
+
+    - Pros
+
+    - Cons
+
+5. No-slip VS Double Track
+
+    - Pros
+
+    - Cons
+
+6. No-slip VS Yaw rate
+
+    - Pros
+
+    - Cons
+
 # LAB 1.2 Path Tracking Controller
 First *Spawn robot* by command from LAB 1.1 then
 1. Run controller server

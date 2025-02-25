@@ -19,13 +19,11 @@
                 <!-- The topic name where the position will be published -->
                 <remapping>odom:=/odometry/ground_truth</remapping>
             </ros>
-            <frameName>world</frameName>
+            <frame_name>odom</frame_name>
             <!-- Replace with your robot's main link -->
             <body_name>base_footprint</body_name>
             <!-- Update rate in Hz -->
-            <updateRate>100.0</updateRate>
-            <!-- <xyz_offset>9.073496746393584 0 0</xyz_offset>
-            <rpy_offset>0 0 1.5700039414375448</rpy_offset> -->
+            <update_rate>100.0</update_rate>
         </plugin>
     </gazebo>
 
