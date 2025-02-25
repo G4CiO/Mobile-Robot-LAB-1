@@ -8,6 +8,7 @@
         <background>
             <color>0 0 0 1</color>
         </background>
+        <shadows>0</shadows>
     </scene>
 
     <include>
@@ -22,7 +23,7 @@
 
             <light name='user_point_light_8' type='point'>
       <pose>8.0 -8.0 2.0 0 -0 0</pose>
-      <diffuse>0.5 0.5 0.5 1</diffuse>
+      <diffuse>0.1 0.1 0.1 1</diffuse>
       <specular>0.1 0.1 0.1 1</specular>
       <attenuation>
         <range>100</range>
@@ -36,7 +37,7 @@
 
             <light name='user_point_light_7' type='point'>
       <pose>-8.0 8.0 2.0 0 -0 0</pose>
-      <diffuse>0.5 0.5 0.5 1</diffuse>
+      <diffuse>0.1 0.1 0.1 1</diffuse>
       <specular>0.1 0.1 0.1 1</specular>
       <attenuation>
         <range>100</range>
@@ -50,7 +51,7 @@
     
             <light name='user_point_light_6' type='point'>
       <pose>-8.0 -8.0 2.0 0 -0 0</pose>
-      <diffuse>0.5 0.5 0.5 1</diffuse>
+      <diffuse>0.1 0.1 0.1 1</diffuse>
       <specular>0.1 0.1 0.1 1</specular>
       <attenuation>
         <range>100</range>
@@ -65,7 +66,7 @@
 
         <light name='user_point_light_5' type='point'>
       <pose>8.0 8.0 2.0 0 -0 0</pose>
-      <diffuse>0.5 0.5 0.5 1</diffuse>
+      <diffuse>0.1 0.1 0.1 1</diffuse>
       <specular>0.1 0.1 0.1 1</specular>
       <attenuation>
         <range>100</range>
@@ -82,7 +83,7 @@
 
         <light name='user_point_light_1' type='point'>
       <pose>0.0 -8.0 2.0 0 -0 0</pose>
-      <diffuse>0.5 0.5 0.5 1</diffuse>
+      <diffuse>0.1 0.1 0.1 1</diffuse>
       <specular>0.1 0.1 0.1 1</specular>
       <attenuation>
         <range>100</range>
@@ -98,7 +99,7 @@
 
         <light name='user_point_light_2' type='point'>
       <pose>0.0 8.0 2.0 0 -0 0</pose>
-      <diffuse>0.5 0.5 0.5 1</diffuse>
+      <diffuse>0.1 0.1 0.1 1</diffuse>
       <specular>0.1 0.1 0.1 1</specular>
       <attenuation>
         <range>100</range>
@@ -113,7 +114,7 @@
 
             <light name='user_point_light_3' type='point'>
       <pose>-8.0 0.0 2.0 0 -0 0</pose>
-      <diffuse>0.5 0.5 0.5 1</diffuse>
+      <diffuse>0.1 0.1 0.1 1</diffuse>
       <specular>0.1 0.1 0.1 1</specular>
       <attenuation>
         <range>100</range>
@@ -129,7 +130,7 @@
 
         <light name='user_point_light_4' type='point'>
       <pose>8.0 0.0 2.0 0 -0 0</pose>
-      <diffuse>0.5 0.5 0.5 1</diffuse>
+      <diffuse>0.1 0.1 0.1 1</diffuse>
       <specular>0.1 0.1 0.1 1</specular>
       <attenuation>
         <range>100</range>

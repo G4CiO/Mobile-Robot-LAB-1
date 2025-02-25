@@ -27,7 +27,7 @@ class PathPublisher(Node):
         path_pkg_share_path = get_package_share_directory(pkg_name)
         ws_path, _ = path_pkg_share_path.split('install')
         file = self.get_parameter('file').value
-        self.path_path = os.path.join(ws_path, 'src/Mobile-Robot-LAB-1', pkg_name, 'config', file)
+        self.path_path = os.path.join(ws_path, 'src', pkg_name, 'config', file)
         # Pub
         self.publisher = self.create_publisher(Path, 'path', 10)
         self.path_publisher = self.create_publisher(Path, '/limo/path', 10)

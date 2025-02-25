@@ -28,7 +28,7 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 def generate_launch_description():
     
     pkg = get_package_share_directory('limo_gazebo')
-    rviz_path = os.path.join(pkg,'rviz','display.rviz')
+    rviz_path = os.path.join(pkg,'rviz','display_ekf.rviz')
     rviz = Node(
         package='rviz2',
         executable='rviz2',
@@ -64,7 +64,7 @@ def generate_launch_description():
                 os.path.join(
                     pkg,
                     "launch",
-                    "load_world_into_gazebo.launch.py"
+                    "circuit_bringup.launch.py"
                 )
             ]
         )

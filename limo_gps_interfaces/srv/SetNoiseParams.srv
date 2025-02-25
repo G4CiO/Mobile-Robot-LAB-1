@@ -1,0 +1,6 @@
+# SetNoiseParams.srv
+float64 position_noise_std
+float64 orientation_noise_std
+---
+bool success
+string message

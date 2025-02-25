@@ -30,6 +30,7 @@ def generate_launch_description():
     
     pkg_limo_gazebo = get_package_share_directory('limo_gazebo')
     pkg_limo_bringup = get_package_share_directory('limo_bringup')
+    pkg_limo_localization = get_package_share_directory('limo_localization')
 
     # Declare launch argument for steering mode
     steering_mode_arg = DeclareLaunchArgument(
@@ -76,13 +77,38 @@ def generate_launch_description():
         executable="path_publisher.py",
         name="path_publisher"
     )
+    
+    fake_gps_node = Node(
+    package="limo_bringup",
+    executable="fake_gps_node.py",
+    name="fake_gps_node",
+    output="screen"
+    )
+    
+     # Get path to the EKF configuration file
+    ekf_config_path = os.path.join(
+        pkg_limo_localization,
+        'config',
+        'ekf.yaml'
+    )
+    
+     # EKF node (using robot_localization)
+    ekf_node = Node(
+        package='robot_localization',
+        executable='ekf_node',
+        name='ekf_filter_node',
+        output='screen',
+        parameters=[ekf_config_path]
+    )
 
     launch_description = LaunchDescription()
     launch_description.add_action(steering_mode_arg)
     launch_description.add_action(sim)
     launch_description.add_action(steering_model_node)
     launch_description.add_action(odometry_calculation)
+    launch_description.add_action(fake_gps_node)
+    # launch_description.add_action(ekf_node)
     # launch_description.add_action(controller_server)
-    launch_description.add_action(path_publisher)
+    # launch_description.add_action(path_publisher)
     
     return launch_description

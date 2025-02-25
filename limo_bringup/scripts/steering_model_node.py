@@ -53,12 +53,12 @@ class SteeringModelNode(Node):
 
         front_wheel_position = Float64MultiArray()
         if steering_mode == 'ackermann':
-            front_wheel_position.data = [delta_L, delta_R,]
+            front_wheel_position.data = [delta_L, delta_R, float(self.delta_steer)]
         elif steering_mode == 'bicycle':
-            front_wheel_position.data = [float(self.delta_steer), float(self.delta_steer)]
+            front_wheel_position.data = [float(self.delta_steer), float(self.delta_steer), float(self.delta_steer)]
         else:
             self.get_logger().warn("Invalid steering_mode parameter. Using Ackermann as default.")
-            front_wheel_position.data = [delta_L, delta_R] # Default to Ackermann
+            front_wheel_position.data = [delta_L, delta_R, float(self.delta_steer)] # Default to Ackermann
 
         # Create VelocityControllers for the wheel velocity
         wheel_velocity = Float64MultiArray()

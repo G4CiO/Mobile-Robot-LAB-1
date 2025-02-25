@@ -20,6 +20,10 @@ find_package(ament_cmake REQUIRED)		# cpp (optional)
 find_package(rclcpp REQUIRED)			# cpp (optional)
 find_package(ament_cmake_python REQUIRED)   	# python (optional)
 find_package(rclpy REQUIRED)                	# python (optional)
+find_package(rosidl_default_generators REQUIRED)
+find_package(std_msgs REQUIRED)
+find_package(geometry_msgs REQUIRED)
+find_package(nav_msgs REQUIRED)
 ######################################################
 
 # Install Python Module
@@ -27,12 +31,12 @@ ament_python_install_package(${PROJECT_NAME})
 
 # Install Python executables
 install(PROGRAMS
+  scripts/fake_gps_node.py
   scripts/dummy_script.py
   scripts/steering_model_node.py
   scripts/odometry_calculation.py
   DESTINATION lib/${PROJECT_NAME}
 )
-
 
 # Include Cpp "include" directory
 include_directories(include)

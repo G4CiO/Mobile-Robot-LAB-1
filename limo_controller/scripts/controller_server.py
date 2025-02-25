@@ -33,26 +33,19 @@ class ControllerServer(Node):
 
         # Declare parameters
         self.declare_parameter('file', 'path.yaml')
-        self.declare_parameter('control_mode', 'pure_pursuit')  # Default mode: 'pure_pursuit'
-
-        # Initialization
-        self.robot_x = 0.0
-        self.robot_y = 0.0
-        self.robot_yaw = 0.0
 
         pkg_name = 'limo_controller'
         path_pkg_share_path = get_package_share_directory(pkg_name)
         ws_path, _ = path_pkg_share_path.split('install')
         file = self.get_parameter('file').value
-        self.path_path = os.path.join(ws_path, 'src/Mobile-Robot-LAB-1', pkg_name, 'config', file)
+        self.path_path = os.path.join(ws_path, 'src', pkg_name, 'config', file)
 
         # PID controllers for linear and angular velocities
-        self.linear_pid = PIDController(Kp=1.0, Ki=0.0, Kd=0.0)
-        self.angular_pid = PIDController(Kp=1.0, Ki=0.0, Kd=0.0)
-        self.thresold_distance_error = 0.5
+        self.linear_pid = PIDController(Kp=2.0, Ki=0.0, Kd=0.0)
+        self.angular_pid = PIDController(Kp=2.0, Ki=0.0, Kd=0.0)
+        self.thresold_distance_error = 0.30
 
         # Pure Puresuit controllers
-        self.linear_speed = PIDController(Kp=2.0, Ki=0.0, Kd=0.0)
         self.lookahead_distance = 0.8
         self.declare_parameter('wheelbase', 0.2)   # meters
 
@@ -84,20 +77,13 @@ class ControllerServer(Node):
         return math.atan2(siny_cosp, cosy_cosp)
     
     def timer_callback(self):
-        control_mode = self.get_parameter('control_mode').value
-        if control_mode == 'pid':
-            self.pid_control()
-        elif control_mode == 'pure_pursuit':
-            self.pure_pursuit_control()
-        else:
-            self.get_logger().warn(f"Unknown mode '{control_mode}', defaulting to Pure Pursuit control")
-            self.pure_pursuit_control()
+        # self.pid_control()
+        self.pure_pursuit_control()
 
     def pid_control(self):
         if self.current_target_idx >= len(self.path):
-            self.current_target_idx = 0  # Reset index to loop the path
-            # self.get_logger().info("Path tracking completed!")
-            # return
+            self.get_logger().info("Path tracking completed!")
+            return
         
         target = self.path[self.current_target_idx]
         target_x, target_y, target_yaw = target['x'], target['y'], target['yaw']
@@ -108,10 +94,6 @@ class ControllerServer(Node):
         distance_error = math.hypot(dx, dy)
         yaw_error = target_yaw - self.robot_yaw
 
-        # Check if the target is reached
-        if distance_error < self.thresold_distance_error:
-            self.current_target_idx += 1
-
         # Get control inputs from PID controllers
         linear_speed = self.linear_pid.get_control(distance_error, self.dt)
         angular_speed = self.angular_pid.get_control(yaw_error, self.dt)
@@ -121,11 +103,10 @@ class ControllerServer(Node):
         cmd.linear.x = linear_speed
         cmd.angular.z = angular_speed
         self.cmd_vel_pub.publish(cmd)
-
-        print('////////////////////////////////////////////////////////////////////////')
-        print(f'target_x = {target_x}: {self.robot_x}')
-        print(f'target_y = {target_y}: {self.robot_y}')
-        print(f'distance: {distance_error} < thresold_distance_error: {self.thresold_distance_error}',f'index: {self.current_target_idx}')
+        
+        # Check if the target is reached
+        if distance_error < self.thresold_distance_error:
+            self.current_target_idx += 1
 
     def pure_pursuit_control(self):
         wheelbase = self.get_parameter('wheelbase').value
@@ -154,7 +135,7 @@ class ControllerServer(Node):
         # Steering Angle Calculation (β)
         beta = math.atan2(2 * wheelbase * math.sin(alpha) / self.lookahead_distance, 1.0)
 
-        linear_velocity = self.linear_speed.get_control(distance_error, self.dt)
+        linear_velocity = self.linear_pid.get_control(distance_error, self.dt)
         # Angular Velocity Calculation (ω)
         angular_velocity = (linear_velocity * math.tan(beta)) / wheelbase
 
