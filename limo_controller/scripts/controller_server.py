@@ -60,13 +60,13 @@ class ControllerServer(Node):
         # Pure Puresuit controllers
         self.state = 0
         self.linear_speed_pure = PIDController(Kp=1.0, Ki=0.0, Kd=0.0)
-        self.lookahead_distance = 4.5
+        self.lookahead_distance = 4.5 # Max = 4.5
 
         # Stanley controllers
         self.k = 1.0
         self.ks = 2.5 # Softening constant (ks) = If increase ks, It will decrease swing in steering wheel when at low speed
         self.target_speed = 1.0
-        self.linear_speed_stan = PIDController(Kp=70, Ki=0.0, Kd=0.0)
+        self.linear_speed_stan = PIDController(Kp=0.7, Ki=0.0, Kd=0.0)
 
         # Load path from YAML file
         self.path = self.load_path()
@@ -133,7 +133,7 @@ class ControllerServer(Node):
 
         # Search nearest point index
         # self.serch_nearest_point_index()
-        
+
         target = self.path[self.current_target_idx]
         target_x, target_y = target['x'], target['y']
         
@@ -174,7 +174,7 @@ class ControllerServer(Node):
 
         # Implement Here
         target = self.path[self.current_target_idx]
-        target_x, target_y, target_yaw = target['x'], target['y'], target['yaw']
+        target_x, target_y = target['x'], target['y']
 
         dx = target_x - self.robot_x
         dy = target_y - self.robot_y
@@ -203,8 +203,7 @@ class ControllerServer(Node):
 
     def stanley_control(self):
         wheelbase = self.get_parameter('wheelbase').value
-
-        if self.current_target_idx >= len(self.path):
+        if self.current_target_idx >= len(self.path) - 1:
             # self.current_target_idx = 0  # Reset index to loop the path
             self.pub_cmd(0.0, 0.0)
             return # Stop
@@ -236,7 +235,7 @@ class ControllerServer(Node):
         else:
             delta = 0.0
 
-        linear_velocity = self.linear_speed_stan.get_control(self.target_speed - self.v, self.dt) * self.dt
+        linear_velocity = self.linear_speed_stan.get_control(self.target_speed - self.v, self.dt)
         # Angular Velocity Calculation (ω)
         angular_velocity = (linear_velocity * math.tan(delta)) / wheelbase
 
