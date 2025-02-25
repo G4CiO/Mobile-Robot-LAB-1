@@ -36,15 +36,18 @@ class OdometryCalcurationNode(Node):
         self.delta_R = 0.0
         self.v = 0.0
         self.BETA = 0.0  # Assuming no lateral slip
+        # Offset odometry
+        self.off_x = 9.073496746393584
+        self.off_yaw = 1.5700039414375448
 
         self.x_curr = 0.0 # m
         self.y_curr = 0.0 # m
         self.theta_curr = 0.0 # rad
         self.v_curr = 0.0 # m/s
         self.w_curr = 0.0 # rad/s
-        self.x_prev = 0.0 # m
+        self.x_prev = self.off_x # m
         self.y_prev = 0.0 # m
-        self.theta_prev = 0.0 # rad
+        self.theta_prev = self.off_yaw # rad
         self.v_prev = 0.0 # m/s
         self.w_prev = 0.0 # rad/s
         self.linear_velocity = 0.0 # m/s
@@ -55,13 +58,13 @@ class OdometryCalcurationNode(Node):
         self.theta_curr_2Track = 0.0 # rad
         self.v_curr_2Track = 0,0 # m/s
         self.w_curr_2Track = 0,0 # rad/s
-        self.x_prev_2Track = 0.0 # m
+        self.x_prev_2Track = self.off_x # m
         self.y_prev_2Track = 0.0 # m
-        self.theta_prev_2Track = 0.0 # rad
+        self.theta_prev_2Track = self.off_yaw # rad
         self.v_prev_2Track = 0.0 # m/s
         self.w_prev_2Track = 0.0 # rad/s
 
-        self.x_prev_1Track = 0.0
+        self.x_prev_1Track = self.off_x
         self.x_curr_1Track = 0.0
         self.y_prev_1Track = 0.0
         self.y_curr_1Track = 0.0
@@ -69,16 +72,12 @@ class OdometryCalcurationNode(Node):
         self.v_curr_1Track = 0.0
         self.w_prev_1Track = 0.0
         self.w_curr_1Track = 0.0
-        self.theta_prev_1Track = 0.0
+        self.theta_prev_1Track = self.off_yaw
         self.theta_curr_1Track = 0.0
 
         self.x_gt = 0.0
         self.y_gt = 0.0
         self.quat_gt = []
-
-        # Offset odometry
-        self.off_x = 9.073496746393584
-        self.off_yaw = 1.5700039414375448
 
         # self.L_REAR_STEER_ANGLE = 0.0 # Left rear wheel steering angle (rad)
         # self.R_REAR_STEER_ANGLE = 0.0 # Right rear wheel steering angle (rad)
@@ -153,7 +152,7 @@ class OdometryCalcurationNode(Node):
         self.x_curr = self.x_prev + self.v_prev * self.dt * math.cos(self.theta_prev + self.BETA + ((self.w_prev * self.dt) / 2))
         self.y_curr = self.y_prev + self.v_prev * self.dt * math.sin(self.theta_prev + self.BETA + ((self.w_prev * self.dt) / 2))
         self.theta_curr = self.theta_prev + self.w_prev * self.dt
-        self.quaternion = tf_transformations.quaternion_from_euler(0.0, 0.0, self.theta_curr+self.off_yaw)
+        self.quaternion = tf_transformations.quaternion_from_euler(0.0, 0.0, self.theta_curr)
         self.v_curr = (self.v_rl + self.v_rr)/2
         self.w_curr = self.yaw_rate
 
@@ -177,7 +176,7 @@ class OdometryCalcurationNode(Node):
         self.x_curr_1Track = self.x_prev_1Track + self.v_prev_1Track * self.dt * math.cos(self.theta_prev_1Track + self.BETA + ((self.w_prev_1Track * self.dt) / 2))
         self.y_curr_1Track = self.y_prev_1Track + self.v_prev_1Track * self.dt * math.sin(self.theta_prev_1Track + self.BETA + ((self.w_prev_1Track * self.dt) / 2))
         self.theta_curr_1Track = self.theta_prev_1Track + self.w_prev_1Track * self.dt
-        self.quaternion_1Track = tf_transformations.quaternion_from_euler(0.0, 0.0, self.theta_curr_1Track+self.off_yaw)
+        self.quaternion_1Track = tf_transformations.quaternion_from_euler(0.0, 0.0, self.theta_curr_1Track)
         self.v_curr_1Track = (self.v_rl + self.v_rr) / 2
         self.w_curr_1Track = (self.v_prev_1Track / self.wheelbase) * math.tan(delta_steer)
 
@@ -195,7 +194,7 @@ class OdometryCalcurationNode(Node):
         self.x_curr_2Track = self.x_prev_2Track + self.v_prev_2Track * self.dt * math.cos(self.theta_prev_2Track + self.BETA + ((self.w_prev_2Track * self.dt) / 2))
         self.y_curr_2Track = self.y_prev_2Track + self.v_prev_2Track * self.dt * math.sin(self.theta_prev_2Track + self.BETA + ((self.w_prev_2Track * self.dt) / 2))
         self.theta_curr_2Track = self.theta_prev_2Track + self.w_prev_2Track * self.dt
-        self.quaternion_2Track = tf_transformations.quaternion_from_euler(0.0, 0.0, self.theta_curr_2Track+self.off_yaw)
+        self.quaternion_2Track = tf_transformations.quaternion_from_euler(0.0, 0.0, self.theta_curr_2Track)
         self.v_curr_2Track = (self.v_rl + self.v_rr) / 2
         self.w_curr_2Track = (self.v_rr - self.v_rl) / self.track_width
 
@@ -217,8 +216,8 @@ class OdometryCalcurationNode(Node):
         odom_msg.child_frame_id = child_frame_id
 
         # Position
-        odom_msg.pose.pose.position.x = -pose_y + self.off_x
-        odom_msg.pose.pose.position.y = pose_x
+        odom_msg.pose.pose.position.x = pose_x
+        odom_msg.pose.pose.position.y = pose_y
         odom_msg.pose.pose.position.z = 0.0
         
         # Orientation (Quaternion from Yaw)
