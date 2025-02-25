@@ -7,10 +7,9 @@ import tf2_ros
 import tf_transformations
 from rclpy.node import Node
 from nav_msgs.msg import Odometry
-from geometry_msgs.msg import Twist, TransformStamped, Vector3
 from sensor_msgs.msg import Imu, JointState
 from nav_msgs.msg import Path
-from geometry_msgs.msg import PoseStamped
+from geometry_msgs.msg import TransformStamped, Vector3
 from std_srvs.srv import Empty
 from tf2_ros.static_transform_broadcaster import StaticTransformBroadcaster
 
@@ -41,50 +40,42 @@ class OdometryCalcurationNode(Node):
         self.off_yaw = 1.5700039414375448
 
         self.x_curr = 0.0 # m
-        self.y_curr = 0.0 # m
-        self.theta_curr = 0.0 # rad
-        self.v_curr = 0.0 # m/s
-        self.w_curr = 0.0 # rad/s
         self.x_prev = self.off_x # m
+        self.y_curr = 0.0 # m
         self.y_prev = 0.0 # m
-        self.theta_prev = self.off_yaw # rad
+        self.v_curr = 0.0 # m/s
         self.v_prev = 0.0 # m/s
+        self.w_curr = 0.0 # rad/s
         self.w_prev = 0.0 # rad/s
-        self.linear_velocity = 0.0 # m/s
         self.yaw_rate = 0.0 # rad/s
+        self.theta_curr = 0.0 # rad
+        self.theta_prev = self.off_yaw # rad
 
         self.x_curr_2Track = 0.0 # m
-        self.y_curr_2Track = 0.0 # m
-        self.theta_curr_2Track = 0.0 # rad
-        self.v_curr_2Track = 0,0 # m/s
-        self.w_curr_2Track = 0,0 # rad/s
         self.x_prev_2Track = self.off_x # m
+        self.y_curr_2Track = 0.0 # m
         self.y_prev_2Track = 0.0 # m
-        self.theta_prev_2Track = self.off_yaw # rad
+        self.v_curr_2Track = 0,0 # m/s
         self.v_prev_2Track = 0.0 # m/s
+        self.w_curr_2Track = 0,0 # rad/s
         self.w_prev_2Track = 0.0 # rad/s
+        self.theta_curr_2Track = 0.0 # rad
+        self.theta_prev_2Track = self.off_yaw # rad
 
-        self.x_prev_1Track = self.off_x
-        self.x_curr_1Track = 0.0
-        self.y_prev_1Track = 0.0
-        self.y_curr_1Track = 0.0
-        self.v_prev_1Track = 0.0
-        self.v_curr_1Track = 0.0
-        self.w_prev_1Track = 0.0
-        self.w_curr_1Track = 0.0
-        self.theta_prev_1Track = self.off_yaw
-        self.theta_curr_1Track = 0.0
+        self.x_curr_1Track = 0.0 # m
+        self.x_prev_1Track = self.off_x # m
+        self.y_curr_1Track = 0.0 # m
+        self.y_prev_1Track = 0.0 # m
+        self.v_curr_1Track = 0.0 # m/s
+        self.v_prev_1Track = 0.0 # m/s
+        self.w_curr_1Track = 0.0 # rad/s
+        self.w_prev_1Track = 0.0 # rad/s
+        self.theta_curr_1Track = 0.0 # rad
+        self.theta_prev_1Track = self.off_yaw # rad
 
         self.x_gt = 0.0
         self.y_gt = 0.0
         self.quat_gt = []
-
-        # self.L_REAR_STEER_ANGLE = 0.0 # Left rear wheel steering angle (rad)
-        # self.R_REAR_STEER_ANGLE = 0.0 # Right rear wheel steering angle (rad)
-        # self.L_RX = -self.wheelbase/2  # Left rear wheel x-offset
-        # self.R_RX = -self.wheelbase/2  # Right rear wheel x-offset 
-        # self.L_RY = self.track_width/2  # Left rear wheel y-offset 
-        # self.R_RY = -self.track_width/2   # Right rear wheel y-offset 
 
         # ROS 2 subscriptions
         self.create_subscription(Imu, '/limo/imu', self.imu_callback, 10)
@@ -95,10 +86,6 @@ class OdometryCalcurationNode(Node):
         self.yaw_rate_publisher = self.create_publisher(Odometry, '/odometry/yaw_rate', 10)
         self.single_track_publisher = self.create_publisher(Odometry, '/odometry/single_track', 10)
         self.double_track_publisher = self.create_publisher(Odometry, '/odometry/double_track', 10)
-
-        # Store path data
-        self.path_msg = Path()
-        self.path_msg.header.frame_id = "world"  # Change if using a different frame
         
         # TF broadcaster
         # self.tf_broadcaster = tf2_ros.TransformBroadcaster(self)
@@ -168,10 +155,6 @@ class OdometryCalcurationNode(Node):
 
     def Odo1Track(self):
         delta_steer = self.delta_steering(self.delta_L, self.delta_R, self.wheelbase, self.track_width, self.steering_ratio)
-        # if (math.tan(self.delta_R)+math.tan(self.delta_L)) != 0:
-        #     delta_steer = math.atan((2*math.tan(self.delta_L)*math.tan(self.delta_R))/(math.tan(self.delta_R)+math.tan(self.delta_L)))
-        # else:
-        #     delta_steer = 0.0
 
         self.x_curr_1Track = self.x_prev_1Track + self.v_prev_1Track * self.dt * math.cos(self.theta_prev_1Track + self.BETA + ((self.w_prev_1Track * self.dt) / 2))
         self.y_curr_1Track = self.y_prev_1Track + self.v_prev_1Track * self.dt * math.sin(self.theta_prev_1Track + self.BETA + ((self.w_prev_1Track * self.dt) / 2))
@@ -209,7 +192,6 @@ class OdometryCalcurationNode(Node):
         self.theta_prev_2Track = self.theta_curr_2Track 
 
     def publish_odom(self, frame_id, child_frame_id, pose_x, pose_y, quaternion_list, v_curr, w_curr, publisher):
-        # Publish odometry message
         odom_msg = Odometry()
         odom_msg.header.stamp = self.get_clock().now().to_msg()
         odom_msg.header.frame_id = frame_id

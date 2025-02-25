@@ -59,8 +59,8 @@ class ControllerServer(Node):
 
         # Pure Puresuit controllers
         self.state = 0
-        self.linear_speed_pure = PIDController(Kp=2.0, Ki=0.0, Kd=0.0)
-        self.lookahead_distance = 0.8
+        self.linear_speed_pure = PIDController(Kp=1.0, Ki=0.0, Kd=0.0)
+        self.lookahead_distance = 4.5
 
         # Stanley controllers
         self.k = 1.0
@@ -91,12 +91,27 @@ class ControllerServer(Node):
         orientation = msg.pose.pose.orientation
         self.robot_yaw = euler_from_quaternion([orientation.x, orientation.y, orientation.z, orientation.w])[2]        
         self.v = msg.twist.twist.linear.x
-    
-    def get_yaw_from_quaternion(self, quat):
-        siny_cosp = 2 * (quat.w * quat.z + quat.x * quat.y)
-        cosy_cosp = 1 - 2 * (quat.y * quat.y + quat.z * quat.z)
-        return math.atan2(siny_cosp, cosy_cosp)
-    
+
+    def pub_cmd(self, vx, wz):
+        msg = Twist()
+        msg.linear.x = vx
+        msg.angular.z = wz
+        self.cmd_vel_pub.publish(msg)
+
+    def normalize_angle(self, angle):
+        # Normalize an angle to [-pi, pi]
+        normalize_angle = math.atan2(math.sin(angle), math.cos(angle))
+        return normalize_angle
+
+    def serch_nearest_point_index(self):
+        # Search nearest point index
+        if self.state == 0:
+            dx = [self.robot_x - target_x['x'] for target_x in self.path]
+            dy = [self.robot_y - target_y['y'] for target_y in self.path]
+            d = np.hypot(dx, dy)
+            self.current_target_idx = np.argmin(d)
+            self.state = 1
+
     def timer_callback(self):
         control_mode = self.get_parameter('control_mode').value
         if control_mode == 'pid':
@@ -112,15 +127,12 @@ class ControllerServer(Node):
     def pid_control(self):
         wheelbase = self.get_parameter('wheelbase').value
         if self.current_target_idx >= len(self.path):
-            self.current_target_idx = 0  # Reset index to loop the path
+            # self.current_target_idx = 0  # Reset index to loop the path
+            self.pub_cmd(0.0, 0.0)
+            return # Stop
 
         # Search nearest point index
-        if self.state == 0:
-            dx = [self.robot_x - target_x['x'] for target_x in self.path]
-            dy = [self.robot_y - target_y['y'] for target_y in self.path]
-            d = np.hypot(dx, dy)
-            self.current_target_idx = np.argmin(d)
-            self.state = 1
+        # self.serch_nearest_point_index()
         
         target = self.path[self.current_target_idx]
         target_x, target_y = target['x'], target['y']
@@ -133,7 +145,7 @@ class ControllerServer(Node):
         target_yaw = math.atan2(dy,dx)
         yaw_error = target_yaw - self.robot_yaw
         # Normalize an angle to [-pi, pi]
-        yaw_error = math.atan2(math.sin(yaw_error), math.cos(yaw_error))
+        yaw_error = self.normalize_angle(yaw_error)
 
         # Check if the target is reached
         if distance_error < self.thresold_distance_error:
@@ -146,31 +158,19 @@ class ControllerServer(Node):
         beta = math.atan(angular_velocity * wheelbase / linear_velocity)
         beta = max(-0.523598767, min(beta, 0.523598767))
         angular_velocity = (linear_velocity * math.tan(beta)) / wheelbase
-        # Publish velocity command
-        cmd = Twist()
-        cmd.linear.x = linear_velocity
-        cmd.angular.z = angular_velocity
-        self.cmd_vel_pub.publish(cmd)
 
-        # Debug
-        # print('////////////////////////////////////////////////////////////////////////')
-        # print(f'target_x = {target_x}: {self.robot_x}')
-        # print(f'target_y = {target_y}: {self.robot_y}')
-        # print(f'distance: {distance_error} < thresold_distance_error: {self.thresold_distance_error}',f'index: {self.current_target_idx}')
+        # Publish velocity command
+        self.pub_cmd(linear_velocity, angular_velocity)
 
     def pure_pursuit_control(self):
         wheelbase = self.get_parameter('wheelbase').value
-
         if self.current_target_idx >= len(self.path):
-            self.current_target_idx = 0  # Reset index to loop the path
-
+            # self.current_target_idx = 0  # Reset index to loop the path
+            self.pub_cmd(0.0, 0.0)
+            return # Stop
+        
         # Search nearest point index
-        if self.state == 0:
-            dx = [self.robot_x - target_x['x'] for target_x in self.path]
-            dy = [self.robot_y - target_y['y'] for target_y in self.path]
-            d = np.hypot(dx, dy)
-            self.current_target_idx = np.argmin(d)
-            self.state = 1
+        # self.serch_nearest_point_index()
 
         # Implement Here
         target = self.path[self.current_target_idx]
@@ -185,7 +185,10 @@ class ControllerServer(Node):
             self.current_target_idx += 1
 
         # Heading Angle Calculation
+        target_yaw = math.atan2(dy,dx)
         alpha = target_yaw - self.robot_yaw
+        # Normalize an angle to [-pi, pi]
+        alpha = self.normalize_angle(alpha)
 
         # Steering Angle Calculation (β)
         beta = math.atan2(2 * wheelbase * math.sin(alpha) / self.lookahead_distance, 1.0)
@@ -196,13 +199,16 @@ class ControllerServer(Node):
         angular_velocity = (linear_velocity * math.tan(beta)) / wheelbase
 
         # Publish cmd_vel
-        msg = Twist()
-        msg.linear.x = linear_velocity
-        msg.angular.z = angular_velocity
-        self.cmd_vel_pub.publish(msg)
+        self.pub_cmd(linear_velocity, angular_velocity)
 
     def stanley_control(self):
         wheelbase = self.get_parameter('wheelbase').value
+
+        if self.current_target_idx >= len(self.path):
+            # self.current_target_idx = 0  # Reset index to loop the path
+            self.pub_cmd(0.0, 0.0)
+            return # Stop
+
         # Calc front axle position
         fx = self.robot_x + (wheelbase/2 * np.cos(self.robot_yaw))
         fy = self.robot_y + (wheelbase/2 * np.sin(self.robot_yaw))
@@ -221,15 +227,12 @@ class ControllerServer(Node):
         # Compute heading error
         theta_e = target['yaw'] - self.robot_yaw
         # Normalize an angle to [-pi, pi]
-        theta_e = np.arctan2(np.sin(theta_e),np.cos(theta_e))
+        theta_e = self.normalize_angle(theta_e)
 
         # Stanley control formula
         if self.v != 0.0:
-            if abs(theta_e) > 0.0:
-                delta = theta_e + np.arctan2(self.k * e_fa, self.ks + self.v)
-                delta = max(-0.523598767, min(delta, 0.523598767))
-            else:
-                delta = 0.0
+            delta = theta_e + np.arctan2(self.k * e_fa, self.ks + self.v)
+            delta = max(-0.523598767, min(delta, 0.523598767))
         else:
             delta = 0.0
 
@@ -237,26 +240,8 @@ class ControllerServer(Node):
         # Angular Velocity Calculation (ω)
         angular_velocity = (linear_velocity * math.tan(delta)) / wheelbase
 
-
-        # Debug
-        # tx = target['x']
-        # ty = target['y']
-        # tya = target['yaw']
-        # print('////////////////////////////////////////////////////////////////////////')
-        # print(f'theta_e = {theta_e}')
-        # print(f'Steering Angle: {delta}')
-        # print(f'target_x = {tx}: {self.robot_x}')
-        # print(f'target_y = {ty}: {self.robot_y}')
-        # print(f'distance: {e_fa} ',f'index: {target_idx}')
-        # print(f'target_yaw = {tya}: {self.robot_yaw}')
-        # print(f'yaw_error = {theta_e}')
-        # print(f'linear_velocity = {linear_velocity}, angular_velocity = {angular_velocity}')
-
         # Publish cmd_vel
-        msg = Twist()
-        msg.linear.x = linear_velocity
-        msg.angular.z = angular_velocity
-        self.cmd_vel_pub.publish(msg)
+        self.pub_cmd(linear_velocity, angular_velocity)
 
 def main(args=None):
     rclpy.init(args=args)
