@@ -60,7 +60,7 @@ class ControllerServer(Node):
         # Pure Puresuit controllers
         self.state = 0
         self.linear_speed_pure = PIDController(Kp=1.0, Ki=0.0, Kd=0.0)
-        self.lookahead_distance = 4.5 # Max = 4.5
+        self.lookahead_distance = 1.0 # Max = 4.5
 
         # Stanley controllers
         self.k = 1.0
