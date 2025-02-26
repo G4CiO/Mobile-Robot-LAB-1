@@ -28,7 +28,9 @@ ament_python_install_package(${PROJECT_NAME})
 # Install Python executables
 install(PROGRAMS
   scripts/plot_odom.py
-  scripts/test.py
+  scripts/COV_compute.py
+  scripts/ekf_node.py
+  scripts/fake_gps_node.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

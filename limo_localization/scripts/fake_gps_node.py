@@ -16,7 +16,7 @@ class FakeGPSNode(Node):
         self.get_logger().info("Fake GPS node (Odometry-based) has started.")
 
         # Parameters for noise
-        self.declare_parameter('position_noise_std', 0.5)  # meters
+        self.declare_parameter('position_noise_std', 1.0)  # meters
         self.declare_parameter('orientation_noise_std', np.deg2rad(0.01))  # radians
         self.position_noise_std = self.get_parameter('position_noise_std').value
         self.orientation_noise_std = self.get_parameter('orientation_noise_std').value

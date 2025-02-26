@@ -4,15 +4,13 @@ import yaml
 import os
 import rclpy
 from rclpy.node import Node
-from nav_msgs.msg import Odometry
+from nav_msgs.msg import Odometry      # เปลี่ยนจากการใช้ PoseStamped เป็น Odometry
 from sensor_msgs.msg import Imu
-from geometry_msgs.msg import PoseStamped
+from geometry_msgs.msg import PoseStamped  # เก็บไว้สำหรับการแปลงข้อมูล (ถ้าต้องการ)
 from tf_transformations import quaternion_from_euler, euler_from_quaternion
 
 import numpy as np
 import math
-
-
 
 def find_workspace_by_name(start_path, workspace_name="MOBILE_ROBOT_WS"):
     current_dir = os.path.abspath(start_path)
@@ -47,7 +45,6 @@ def load_covariances():
         data = yaml.safe_load(f)
     return data.get("covariances", None)
 
-
 # Load covariance matrices from YAML using the workspace finder
 # Measurement noise covariance for odometry (12x12): [p (3), v (3), rpy (3), omega (3)]
 covs = load_covariances()
@@ -75,7 +72,7 @@ Q = np.diag([
 ]) ** 2
 
 # Measurement noise covariance for GPS (6x6): [p (3), v (3)]
-R_GPS = np.diag([2.0, 2.0, 2.0, 0.0, 0.0, 0.0]) ** 2
+R_GPS = np.diag([1.0, 1.0, 1.0, 0.0, 0.0, 0.0]) ** 2
 # Measurement noise covariance for IMU (9x9): [orientation (3), angular velocity (3), linear acceleration (3)]
 R_imu = np.diag([
     np.deg2rad(1.0), np.deg2rad(1.0), np.deg2rad(1.0),
@@ -83,14 +80,9 @@ R_imu = np.diag([
     0.2, 0.2, 0.2
 ]) ** 2
 
-
 # Helper functions: Rotation Matrix, Jacobian, and their derivatives
 
 def R_from_euler(roll, pitch, yaw):
-    """
-    คำนวณ Rotation Matrix จาก Euler angles โดยใช้สูตร:
-    R = Rz(yaw) * Ry(pitch) * Rx(roll)
-    """
     cr = math.cos(roll)
     sr = math.sin(roll)
     cp = math.cos(pitch)
@@ -105,14 +97,11 @@ def R_from_euler(roll, pitch, yaw):
     return R
 
 def J_from_euler(roll, pitch, yaw):
-    """
-    คำนวณเมทริกซ์แปลง J ที่แปลง angular velocity ให้เป็น Euler angle rates สำหรับ ZYX Euler angles
-    """
     roll = float(roll)
     pitch = float(pitch)
     cos_pitch = math.cos(pitch)
     if abs(cos_pitch) < 1e-4:
-        cos_pitch = 1e-4  # ป้องกัน division by zero
+        cos_pitch = 1e-4
     tan_pitch = math.tan(pitch)
     J = np.array([
         [1, math.sin(roll)*tan_pitch, math.cos(roll)*tan_pitch],
@@ -203,17 +192,7 @@ def dJ_dpitch(roll, pitch, yaw):
 def dJ_dyaw(roll, pitch, yaw):
     return np.zeros((3,3))
 
-# Dynamic model and Jacobian for the prediction step
-
 def dynamic_model(x, dt, R_from_euler, J_from_euler, u_alpha):
-    """
-    คำนวณ state ใหม่จาก state ปัจจุบันด้วยสมการ:
-      pₖ₊₁ = pₖ + R(rₖ) (vₖ*dt + 0.5*aₖ*dt²)
-      rₖ₊₁ = rₖ + J(rₖ)*ωₖ*dt
-      vₖ₊₁ = vₖ + aₖ*dt
-      ωₖ₊₁ = ωₖ + u_α*dt
-      aₖ₊₁ = aₖ
-    """
     x_new = np.zeros((15,1))
     roll = x[3,0]
     pitch = x[4,0]
@@ -229,8 +208,8 @@ def dynamic_model(x, dt, R_from_euler, J_from_euler, u_alpha):
     return x_new
 
 def jacobian_F(x, dt, R_from_euler, J_from_euler,
-                   dR_droll, dR_dpitch, dR_dyaw,
-                   dJ_droll, dJ_dpitch, dJ_dyaw):
+               dR_droll, dR_dpitch, dR_dyaw,
+               dJ_droll, dJ_dpitch, dJ_dyaw):
     F = np.eye(15)
     I3 = np.eye(3)
     roll = x[3,0]
@@ -271,21 +250,15 @@ def ekf_predict(xEst, PEst, dt, Q, R_from_euler, J_from_euler,
     return xPred, PPred
 
 def ekf_update_odom(xEst, PEst, z, R_odom):
-    # >>>>> MODIFIED: z now contains 12 measurements: position, orientation, linear velocity, angular velocity <<<<<
     H = np.zeros((12, 15))
-    # Map position (state indices 0:3)
     H[0:3, 0:3] = np.eye(3)
-    # Map orientation (roll, pitch, yaw) from state indices 3:6
     H[3:6, 3:6] = np.eye(3)
-    # Map linear velocity from state indices 6:9
     H[6:9, 6:9] = np.eye(3)
-    # Map angular velocity from state indices 9:12
     H[9:12, 9:12] = np.eye(3)
 
     zPred = H @ xEst
     y = z - zPred
 
-    # >>>>> MODIFIED: Normalize the orientation residual (rows 3 to 5) <<<<<
     for i in range(3, 6):
         y[i, 0] = normalize_angle(y[i, 0])
         
@@ -295,24 +268,18 @@ def ekf_update_odom(xEst, PEst, z, R_odom):
     PEst_new = (np.eye(15) - K @ H) @ PEst
     return xEst_new, PEst_new
 
-
 def normalize_angle(angle):
-    """
-    ปรับมุมให้อยู่ในช่วง [-pi, pi].
-    """
     return (angle + np.pi) % (2 * np.pi) - np.pi
 
 def ekf_update_imu(xEst, PEst, z, R_imu):
-    # สำหรับ IMU: วัด [roll, pitch, yaw, ω_x, ω_y, ω_z, a_x, a_y, a_z]^T
     H = np.zeros((9, 15))
-    H[0:3, 3:6] = np.eye(3)      # orientation
-    H[3:6, 9:12] = np.eye(3)     # angular velocity
-    H[6:9, 12:15] = np.eye(3)    # linear acceleration
+    H[0:3, 3:6] = np.eye(3)
+    H[3:6, 9:12] = np.eye(3)
+    H[6:9, 12:15] = np.eye(3)
     H[8:14] = 0
     zPred = H @ xEst
-    y = z - zPred  # innovation
+    y = z - zPred
     
-    # Normalize the orientation innovation (roll, pitch, yaw)
     for i in range(3):
         y[i, 0] = normalize_angle(y[i, 0])
     
@@ -321,18 +288,13 @@ def ekf_update_imu(xEst, PEst, z, R_imu):
     xEst_new = xEst + K @ y
     PEst_new = (np.eye(15) - K @ H) @ PEst
     
-    # Normalize the updated orientation state as well
     for i in range(3):
         xEst_new[3 + i, 0] = normalize_angle(xEst_new[3 + i, 0])
     
     return xEst_new, PEst_new
 
 def ekf_update_gps(xEst, PEst, z, R_GPS):
-    # For GPS: measure [p_x, p_y, p_z, v_x, v_y, v_z]^T
     H = np.zeros((6, 15))
-    # Here, you need to map the state vector to the measured states.
-    # For example, if the state vector contains position at indices 0:3
-    # and velocity at indices 6:9, then you can set:
     H[0:3, 0:3] = np.eye(3)
     H[3:6, 6:9] = np.eye(3)
     zPred = H @ xEst
@@ -342,7 +304,6 @@ def ekf_update_gps(xEst, PEst, z, R_GPS):
     xEst_new = xEst + K @ y
     PEst_new = (np.eye(15) - K @ H) @ PEst
     return xEst_new, PEst_new
-
 
 class EKFFullNode(Node):
     def __init__(self):
@@ -355,49 +316,44 @@ class EKFFullNode(Node):
         self.new_odom = False
         self.z_imu = None
         self.new_imu = False
+        self.z_gps = None
+        self.new_gps = False
         self.u_alpha = np.zeros((3,1))
-        
-        #gps_varibles
-        self.new_gps = None
         
         self.odom_sub = self.create_subscription(Odometry, '/odometry/yaw_rate', self.odom_callback, 10)
         self.imu_sub = self.create_subscription(Imu, '/imu', self.imu_callback, 10)
         self.gps_sub = self.create_subscription(Odometry, '/gps/odom', self.gps_callback, 10)
 
-        self.ekf_pub = self.create_publisher(PoseStamped, '/ekf_pose', 10)
+        # *** เปลี่ยน publisher จาก PoseStamped เป็น Odometry ***
+        # เดิม: self.ekf_pub = self.create_publisher(PoseStamped, '/ekf_pose', 10)
+        self.ekf_pub = self.create_publisher(Odometry, '/ekf_odom', 10)
+        # *** สิ้นสุดการเปลี่ยนแปลง publisher ***
+
         self.timer = self.create_timer(self.dt, self.timer_callback)
         
-        
     def odom_callback(self, msg:Odometry):
-        # Extract position (unchanged)
         px = msg.pose.pose.position.x
         py = msg.pose.pose.position.y
         pz = msg.pose.pose.position.z
 
-        # >>>>> MODIFIED: Extract orientation from quaternion and convert to Euler angles <<<<<
         q = msg.pose.pose.orientation
         quat = [q.x, q.y, q.z, q.w]
         (roll, pitch, yaw) = euler_from_quaternion(quat)
 
-        # Extract linear velocity (unchanged)
         vx = msg.twist.twist.linear.x
         vy = msg.twist.twist.linear.y
         vz = msg.twist.twist.linear.z
 
-        # >>>>> MODIFIED: Extract angular velocity <<<<<
         wx = msg.twist.twist.angular.x
         wy = msg.twist.twist.angular.y
         wz = msg.twist.twist.angular.z
 
-        # >>>>> MODIFIED: Combine into a 12x1 measurement vector <<<<<
-        # Order: [position (3), orientation (3), linear velocity (3), angular velocity (3)]
         self.z_odom = np.array([[px], [py], [pz],
                                 [roll], [pitch], [yaw],
                                 [vx], [vy], [vz],
                                 [wx], [wy], [wz]])
         self.new_odom = True
 
-        
     def imu_callback(self, msg):
         q = msg.orientation
         quat = [q.x, q.y, q.z, q.w]
@@ -432,12 +388,10 @@ class EKFFullNode(Node):
             dt = self.dt
         self.last_time = current_time
         
-        # Prediction step
         self.xEst, self.PEst = ekf_predict(self.xEst, self.PEst, dt, Q, R_from_euler, J_from_euler,
                                            dR_droll, dR_dpitch, dR_dyaw,
                                            dJ_droll, dJ_dpitch, dJ_dyaw, self.u_alpha)
         
-        # Update step if new measurements are available
         if self.new_odom and self.z_odom is not None:
             self.xEst, self.PEst = ekf_update_odom(self.xEst, self.PEst, self.z_odom, R_odom)
             self.new_odom = False
@@ -451,22 +405,39 @@ class EKFFullNode(Node):
         self.publish_estimate()
         
     def publish_estimate(self):
-        msg = PoseStamped()
-        msg.header.stamp = self.get_clock().now().to_msg()
-        msg.header.frame_id = "odom"
-        msg.pose.position.x = self.xEst[0, 0]
-        msg.pose.position.y = self.xEst[1, 0]
-        msg.pose.position.z = self.xEst[2, 0]
+        # *** เปลี่ยนวิธี publish จาก PoseStamped เป็น Odometry ***
+        odom_msg = Odometry()
+        odom_msg.header.stamp = self.get_clock().now().to_msg()
+        odom_msg.header.frame_id = "odom"
+        odom_msg.child_frame_id = "base_link"  # ระบุ child frame ตามที่ต้องการ
+
+        # กำหนดตำแหน่งจาก state vector
+        odom_msg.pose.pose.position.x = self.xEst[0, 0]
+        odom_msg.pose.pose.position.y = self.xEst[1, 0]
+        odom_msg.pose.pose.position.z = self.xEst[2, 0]
+
+        # แปลง Euler angles (roll, pitch, yaw) เป็น quaternion
         roll = self.xEst[3, 0]
         pitch = self.xEst[4, 0]
         yaw = self.xEst[5, 0]
         q = quaternion_from_euler(roll, pitch, yaw)
-        msg.pose.orientation.x = q[0]
-        msg.pose.orientation.y = q[1]
-        msg.pose.orientation.z = q[2]
-        msg.pose.orientation.w = q[3]
-        self.ekf_pub.publish(msg)
+        odom_msg.pose.pose.orientation.x = q[0]
+        odom_msg.pose.pose.orientation.y = q[1]
+        odom_msg.pose.pose.orientation.z = q[2]
+        odom_msg.pose.pose.orientation.w = q[3]
 
+        # กำหนดความเร็ว (linear และ angular) จาก state vector
+        odom_msg.twist.twist.linear.x = self.xEst[6, 0]
+        odom_msg.twist.twist.linear.y = self.xEst[7, 0]
+        odom_msg.twist.twist.linear.z = self.xEst[8, 0]
+        odom_msg.twist.twist.angular.x = self.xEst[9, 0]
+        odom_msg.twist.twist.angular.y = self.xEst[10, 0]
+        odom_msg.twist.twist.angular.z = self.xEst[11, 0]
+
+        # Publish Odometry message
+        self.ekf_pub.publish(odom_msg)
+        # *** สิ้นสุดการเปลี่ยนแปลง publish message ***
+        
 def main(args=None):
     rclpy.init(args=args)
     ekf_node = EKFFullNode()
@@ -476,4 +447,3 @@ def main(args=None):
 
 if __name__ == '__main__':
     main()
-
