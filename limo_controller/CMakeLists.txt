@@ -31,6 +31,8 @@ install(PROGRAMS
   scripts/controller_server.py
   scripts/path_publisher.py
   scripts/odometry_plotter.py
+  scripts/xyz_plotter.py
+  scripts/all_plotter.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

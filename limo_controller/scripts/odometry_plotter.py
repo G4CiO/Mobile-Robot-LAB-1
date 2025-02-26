@@ -34,7 +34,7 @@ class OdometryPlotter(Node):
 
         # Matplotlib setup
         self.fig, self.axes = plt.subplots(1, 3, figsize=(12, 4))
-        self.fig.suptitle('Odometry Comparison with Ground Truth by No Slip condition constraints')
+        self.fig.suptitle('Odometry Comparison with Ground Truth by Basic Model')
 
     def callback_ground_truth(self, msg:Odometry):
         self.data['ground_truth']['x'].append(msg.pose.pose.position.x)
