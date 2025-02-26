@@ -28,20 +28,20 @@
     <link name="base_footprint"/>
 
     <joint name="base_joint" type="fixed">
-    <parent link="base_footprint"/>
-    <child link="base_link"/>
-    <origin xyz="0.0 0.0 0.15" rpy="0 0 0"/>
+        <parent link="base_footprint"/>
+        <child link="base_link"/>
+        <origin xyz="0.0 0.0 0.15" rpy="0 0 0"/>
     </joint>
     <!-- Base link -->
     <link name="base_link">
         <visual>
-            <origin xyz="0 0 -0.15" rpy="0 0 1.57" />
+            <origin xyz="${wheelbase/2} 0 -0.15" rpy="0 0 1.57" />
             <geometry>
                 <mesh filename="file:///$(find limo_description)/meshes/limo_base.dae" />
             </geometry>
         </visual>
         <collision>
-            <origin xyz="0 0 0" rpy="0 0 0" />
+            <origin xyz="${wheelbase/2} 0 0" rpy="0 0 0" />
           <geometry>
               <box size="${base_x_size} ${base_y_size} ${base_z_size}"/>
           </geometry>
@@ -65,11 +65,11 @@
     </joint>
 
     <xacro:limo_laser parent_prefix="base_link" frame_prefix="laser">
-        <origin xyz="0.103 0 -0.034" rpy="0 0 0"/>
+        <origin xyz="${wheelbase/2 + 0.103} 0 -0.034" rpy="0 0 0"/>
     </xacro:limo_laser>
 
     <xacro:limo_depth_camera parent_prefix="base_link" frame_prefix="depth_camera">
-        <origin xyz="0.084 0 0.03" rpy="0 0 0"/>
+        <origin xyz="${wheelbase/2 + 0.084} 0 0.03" rpy="0 0 0"/>
     </xacro:limo_depth_camera>
 
     <xacro:limo_imu parent_prefix="base_link" frame_prefix="imu">
@@ -77,11 +77,11 @@
     </xacro:limo_imu>
     
     <xacro:limo_left_steering_hinge parent_prefix="base_link" wheel_prefix="left_steering_hinge">
-        <origin xyz="${wheelbase/2} ${track/2} ${wheel_vertical_offset}" rpy="0 0  0" />
+        <origin xyz="${wheelbase} ${track/2} ${wheel_vertical_offset}" rpy="0 0  0" />
     </xacro:limo_left_steering_hinge>
 
     <xacro:limo_right_steering_hinge parent_prefix="base_link" wheel_prefix="right_steering_hinge">
-        <origin xyz="${wheelbase/2} ${-track/2} ${wheel_vertical_offset}" rpy="${M_PI} 0 0" />
+        <origin xyz="${wheelbase} ${-track/2} ${wheel_vertical_offset}" rpy="${M_PI} 0 0" />
     </xacro:limo_right_steering_hinge>
 
 
@@ -108,7 +108,7 @@
     <joint name="rear_left_wheel" type="continuous">
         <parent link="base_link"/>
         <child link="rear_left_wheel_link"/>
-        <origin xyz="${-wheelbase/2} ${track/2} ${wheel_vertical_offset}" rpy="0 0 0" />
+        <origin xyz="0 ${track/2} ${wheel_vertical_offset}" rpy="0 0 0" />
         <axis xyz="0 1 0"/>
     </joint>
 
@@ -135,7 +135,7 @@
     <joint name="rear_right_wheel" type="continuous">
         <parent link="base_link"/>
         <child link="rear_right_wheel_link"/>
-        <origin xyz="${-wheelbase/2} ${-track/2} ${wheel_vertical_offset}" rpy="${M_PI} 0 0" />
+        <origin xyz="0 ${-track/2} ${wheel_vertical_offset}" rpy="${M_PI} 0 0" />
         <axis xyz="0 -1 0"/>
     </joint>
 </robot>

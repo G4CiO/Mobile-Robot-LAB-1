@@ -17,6 +17,14 @@
     <include>
       <uri>model://circuit</uri>
       <pose>0 0 -0.040176 0 0 0</pose>
+      <surface>
+        <friction>
+          <ode>
+            <slip1>0.0</slip1>
+            <slip2>0.0</slip2>
+          </ode>
+        </friction>
+      </surface>
     </include>
 
 
