@@ -74,6 +74,11 @@ class ControllerServer(Node):
         
         # Subscribers and Publishers
         self.odom_sub = self.create_subscription(Odometry, '/odometry/ground_truth', self.odom_callback, 10)
+        
+        #  EKF odometry
+        # self.ekf_odom_sub = self.create_subscription(Odometry, '/ekf_odom', self.odom_callback, 10)
+    
+        
         self.cmd_vel_pub = self.create_publisher(Twist, '/cmd_vel', 10)
         
         # Timer for control loop

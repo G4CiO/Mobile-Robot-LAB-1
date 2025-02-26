@@ -31,6 +31,7 @@ install(PROGRAMS
   scripts/COV_compute.py
   scripts/ekf_node.py
   scripts/fake_gps_node.py
+  scripts/ekf_diagnostics.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
