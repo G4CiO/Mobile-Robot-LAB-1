@@ -69,5 +69,5 @@ First *Spawn robot* by command from LAB 1.1 then
 ## Sampling Data for Covarian calculation
 for stop sampling data 
 ```bash
-    ros2 topic pub --once /stop_collection std_msgs/Empty "{}"
+ros2 topic pub --once /stop_collection std_msgs/Empty "{}"
 ```
