@@ -73,7 +73,7 @@ class EKFDiagnosticsPlotNode(Node):
         self.ekf_line, = self.ax.plot([], [], 'r-', label='EKF Odom')
         self.gt_line, = self.ax.plot([], [], 'g-', label='Ground Truth')
         self.wheel_line, = self.ax.plot([], [], 'b-', label='Wheel Odom')
-        self.gps_scatter, = self.ax.plot([], [], 'ko', markersize=4, label='GPS Odom')
+        self.gps_scatter, = self.ax.plot([], [], 'ko', markersize=1, alpha=0.3, label='GPS Odom')
         self.ax.legend(loc='upper left', fontsize=base_fontsize * 0.7)
 
         # Timer สำหรับ update plotting (อัตรา update 5 Hz)

@@ -1,4 +1,8 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
+"""
+Fake GPS node (Odometry-based) ที่สามารถปรับความถี่ในการ publish ได้
+"""
+
 import rclpy
 from rclpy.node import Node
 from nav_msgs.msg import Odometry
@@ -6,7 +10,7 @@ from geometry_msgs.msg import Quaternion
 import numpy as np
 from tf_transformations import euler_from_quaternion, quaternion_from_euler
 
-# Import the custom service (make sure to adjust the package name accordingly)
+# Import the custom service (ปรับชื่อ package ตามที่ใช้งาน)
 from limo_gps_interfaces.srv import SetNoiseParams
 
 
@@ -21,6 +25,10 @@ class FakeGPSNode(Node):
         self.position_noise_std = self.get_parameter('position_noise_std').value
         self.orientation_noise_std = self.get_parameter('orientation_noise_std').value
 
+        # เพิ่ม parameter สำหรับ publish frequency (Hz)
+        self.declare_parameter('publish_rate', 10.0)  # Default 10 Hz
+        self.publish_rate = self.get_parameter('publish_rate').value
+
         # Subscriber to ground truth odometry
         self.sub = self.create_subscription(
             Odometry, '/odometry/ground_truth', self.odom_callback, 10
@@ -29,10 +37,27 @@ class FakeGPSNode(Node):
         # Publisher for fake GPS data as Odometry
         self.pub = self.create_publisher(Odometry, '/gps/odom', 10)
 
+        # สร้าง timer สำหรับ publish fake GPS data ตาม publish_rate
+        self.publish_timer = self.create_timer(1.0 / self.publish_rate, self.publish_fake_gps)
+
+        # Variable เก็บข้อมูล ground truth ล่าสุด
+        self.latest_odom = None
+
         # Create service for reconfiguring noise parameters
         self.srv = self.create_service(SetNoiseParams, 'set_noise_params', self.set_noise_params_callback)
 
     def odom_callback(self, msg):
+        # เก็บข้อมูล ground truth ล่าสุด
+        self.latest_odom = msg
+
+    def publish_fake_gps(self):
+        # ตรวจสอบว่ามีข้อมูล ground truth ล่าสุดหรือไม่
+        if self.latest_odom is None:
+            return
+
+        # ใช้ข้อมูลจาก latest_odom
+        msg = self.latest_odom
+
         # Extract ground truth position and orientation
         x_gt = msg.pose.pose.position.x
         y_gt = msg.pose.pose.position.y
@@ -74,9 +99,9 @@ class FakeGPSNode(Node):
 
         # Covariance (position and orientation noise)
         gps_msg.pose.covariance = [
-            self.position_noise_std**2, 0.0, 0.0, 0.0, 0.0, 0.0,  # x
-            0.0, self.position_noise_std**2, 0.0, 0.0, 0.0, 0.0,  # y
-            0.0, 0.0, 100.0, 0.0, 0.0, 0.0,                       # z (large, unused)
+            self.position_noise_std**2, 0.0, 0.0, 0.0, 0.0, 0.0, # x
+            0.0, self.position_noise_std**2, 0.0, 0.0, 0.0, 0.0, # y
+            0.0, 0.0, 100.0, 0.0, 0.0, 0.0,                      # z (large, unused)
             0.0, 0.0, 0.0, 100.0, 0.0, 0.0,                      # roll (large, unused)
             0.0, 0.0, 0.0, 0.0, 100.0, 0.0,                      # pitch (large, unused)
             0.0, 0.0, 0.0, 0.0, 0.0, self.orientation_noise_std**2  # yaw
@@ -107,12 +132,14 @@ class FakeGPSNode(Node):
         self.get_logger().info(response.message)
         return response
 
+
 def main(args=None):
     rclpy.init(args=args)
     node = FakeGPSNode()
     rclpy.spin(node)
     node.destroy_node()
     rclpy.shutdown()
+
 
 if __name__ == '__main__':
     main()
