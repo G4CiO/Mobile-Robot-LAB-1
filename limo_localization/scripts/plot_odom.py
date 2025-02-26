@@ -21,14 +21,34 @@ ROS 2 node that:
 - Saves all columns (time + 4*12 states = 1 + 48 = 49 columns) to a CSV file.
 """
 
+import os
+import csv
 import rclpy
 from rclpy.node import Node
 from nav_msgs.msg import Odometry
 from std_msgs.msg import Empty
 import matplotlib.pyplot as plt
-import csv
-import os
 import tf_transformations
+
+def find_workspace_by_name(start_path, workspace_name="MOBILE_ROBOT_WS"):
+    """
+    Traverse upward from start_path until a directory named workspace_name is found.
+    
+    Args:
+        start_path (str): The starting directory path.
+        workspace_name (str): The name of the workspace directory to find.
+        
+    Returns:
+        str or None: The absolute path of the workspace directory if found, else None.
+    """
+    current_dir = os.path.abspath(start_path)
+    while True:
+        if os.path.basename(current_dir) == workspace_name:
+            return current_dir
+        parent_dir = os.path.dirname(current_dir)
+        if parent_dir == current_dir:  # reached the filesystem root
+            return None
+        current_dir = parent_dir
 
 class PlotMultiOdomNode(Node):
     def __init__(self):
@@ -50,6 +70,21 @@ class PlotMultiOdomNode(Node):
         self.double_track_topic = self.get_parameter('double_track_topic').value
         self.update_rate = self.get_parameter('update_rate').value
         self.csv_filename = self.get_parameter('csv_filename').value
+
+        # Determine the CSV file path using the workspace finder algorithm.
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        workspace_dir = find_workspace_by_name(script_dir, "MOBILE_ROBOT_WS")
+        if workspace_dir is None:
+            self.get_logger().error("Could not find workspace directory 'MOBILE_ROBOT_WS'. Using script directory as fallback.")
+            workspace_dir = script_dir
+
+        # Build the data directory path relative to the workspace.
+        data_dir = os.path.join(workspace_dir, "src", "Mobile-Robot-LAB-1", "limo_localization", "data")
+        data_dir = os.path.abspath(data_dir)
+        os.makedirs(data_dir, exist_ok=True)
+        self.csv_file_path = os.path.join(data_dir, self.csv_filename)
+        self.csv_file_path = os.path.abspath(self.csv_file_path)
+        self.get_logger().info(f"CSV will be saved to: {self.csv_file_path}")
 
         # Buffers for real-time plotting (x-y)
         self.gt_x_vals, self.gt_y_vals = [], []
@@ -201,7 +236,7 @@ class PlotMultiOdomNode(Node):
                 f"{topic}_wx", f"{topic}_wy", f"{topic}_wz"
             ])
 
-        file_path = os.path.abspath(self.csv_filename)
+        file_path = self.csv_file_path
         try:
             with open(file_path, mode='w', newline='') as csv_file:
                 writer = csv.writer(csv_file)
