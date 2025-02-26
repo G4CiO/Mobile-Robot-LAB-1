@@ -96,3 +96,33 @@ First *Spawn robot* by command from LAB 1.1 then
     ```bash
     ros2 service call /clear_path std_srvs/srv/Empty
     ```
+# LAB 1.3 Extended kalman filter && Tuning Q and R 
+## Meaning of Q and R
+1. Q (Process Noise Covariance)
+- Represents uncertainty or inaccuracies in the system model.
+- Too-small Q value makes the filter overly trust the model, resulting in a lagged response when unexpected events occur.
+- Too-large Q makes the filter rely more heavily on sensor measurements, potentially causing noisy estimates.
+2. R (Measurement Noise Covariance):
+- Represents sensor or measurement uncertainties.
+- Too-small R value causes the filter to overly trust measurements, becoming vulnerable to noise.
+- Too-large R makes the filter rely excessively on the model, slowing its response to real measurements.
+
+
+## Sampling Data for Covarian calculation
+
+run sampling node 
+```bash
+ros2 run limo_localization plot_odom.py
+```
+for stop sampling data 
+```bash
+ros2 topic pub --once /stop_collection std_msgs/Empty "{}"
+```
+## Images
+
+![Robot Image](image/multi_odom_plot.png)
+
+stop dianosist
+```bash
+ros2 topic pub /stop_collection std_msgs/msg/Empty "{}" --once
+```
