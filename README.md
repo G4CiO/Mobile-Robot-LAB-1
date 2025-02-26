@@ -67,6 +67,11 @@ First *Spawn robot* by command from LAB 1.1 then
 
 
 ## Sampling Data for Covarian calculation
+
+run sampling node 
+```bash
+ros2 run limo_localization plot_odom.py
+```
 for stop sampling data 
 ```bash
 ros2 topic pub --once /stop_collection std_msgs/Empty "{}"
