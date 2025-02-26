@@ -51,6 +51,14 @@ class PlotMultiOdomNode(Node):
         self.update_rate = self.get_parameter('update_rate').value
         self.csv_filename = self.get_parameter('csv_filename').value
 
+        script_dir = os.path.dirname(os.path.realpath(__file__))  # e.g. ".../my_package/scripts"
+        parent_dir = os.path.abspath(os.path.join(script_dir, '..'))  # e.g. ".../my_package"
+        data_dir = os.path.join(parent_dir, 'data')               # e.g. ".../my_package/data"
+        os.makedirs(data_dir, exist_ok=True)
+        
+        self.csv_file_path = os.path.join(data_dir, self.csv_filename)
+        self.get_logger().info(f"CSV will be saved to: {self.csv_file_path}")
+        
         # Buffers for real-time plotting (x-y)
         self.gt_x_vals, self.gt_y_vals = [], []
         self.yaw_rate_x_vals, self.yaw_rate_y_vals = [], []
@@ -201,7 +209,7 @@ class PlotMultiOdomNode(Node):
                 f"{topic}_wx", f"{topic}_wy", f"{topic}_wz"
             ])
 
-        file_path = os.path.abspath(self.csv_filename)
+        file_path = self.csv_file_path
         try:
             with open(file_path, mode='w', newline='') as csv_file:
                 writer = csv.writer(csv_file)
