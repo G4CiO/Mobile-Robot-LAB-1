@@ -64,3 +64,10 @@ First *Spawn robot* by command from LAB 1.1 then
 - Represents sensor or measurement uncertainties.
 - Too-small R value causes the filter to overly trust measurements, becoming vulnerable to noise.
 - Too-large R makes the filter rely excessively on the model, slowing its response to real measurements.
+
+
+## Sampling Data for Covarian calculation
+for stop sampling data 
+```bash
+    ros2 topic pub --once /stop_collection std_msgs/Empty "{}"
+```
