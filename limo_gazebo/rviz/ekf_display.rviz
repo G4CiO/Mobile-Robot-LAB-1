@@ -6,20 +6,15 @@ Panels:
       Expanded:
         - /Grid1/Offset1
         - /RobotModel1/Description Topic1
-        - /TF1
         - /TF1/Frames1
         - /TF1/Tree1
-        - /Yaw Rate1
         - /Yaw Rate1/Shape1
         - /Single Track1/Shape1
         - /Double Track1/Shape1
-        - /Ground Truth1
         - /Ground Truth1/Shape1
-        - /Odometry1
-        - /Odometry1/Shape1
-        - /Odometry1/Covariance1
-        - /Odometry2
-        - /Odometry2/Shape1
+        - /EKF Odometry1/Shape1
+        - /EKF Odometry1/Covariance1
+        - /GPS Odometry1/Shape1
       Splitter Ratio: 0.5
     Tree Height: 485
   - Class: rviz_common/Selection
@@ -112,10 +107,6 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
           Value: true
-        inertial_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
         laser_link:
           Alpha: 1
           Show Axes: false
@@ -125,7 +116,6 @@ Visualization Manager:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-          Value: true
         rear_left_wheel_link:
           Alpha: 1
           Show Axes: false
@@ -140,7 +130,6 @@ Visualization Manager:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-          Value: true
       Mass Properties:
         Inertia: false
         Mass: false
@@ -219,7 +208,7 @@ Visualization Manager:
           Scale: 1
           Value: true
         Value: true
-      Enabled: false
+      Enabled: true
       Keep: 1
       Name: Single Track
       Position Tolerance: 0.10000000149011612
@@ -240,7 +229,7 @@ Visualization Manager:
         History Policy: Keep Last
         Reliability Policy: Reliable
         Value: /odometry/single_track
-      Value: false
+      Value: true
     - Angle Tolerance: 0.10000000149011612
       Class: rviz_default_plugins/Odometry
       Covariance:
@@ -258,7 +247,7 @@ Visualization Manager:
           Scale: 1
           Value: true
         Value: true
-      Enabled: false
+      Enabled: true
       Keep: 1
       Name: Double Track
       Position Tolerance: 0.10000000149011612
@@ -279,7 +268,7 @@ Visualization Manager:
         History Policy: Keep Last
         Reliability Policy: Reliable
         Value: /odometry/double_track
-      Value: false
+      Value: true
     - Angle Tolerance: 0.10000000149011612
       Class: rviz_default_plugins/Odometry
       Covariance:
@@ -408,7 +397,7 @@ Visualization Manager:
         Value: true
       Enabled: true
       Keep: 1
-      Name: Odometry
+      Name: EKF Odometry
       Position Tolerance: 0.10000000149011612
       Shape:
         Alpha: 1
@@ -447,7 +436,7 @@ Visualization Manager:
         Value: false
       Enabled: true
       Keep: 10
-      Name: Odometry
+      Name: GPS Odometry
       Position Tolerance: 0.10000000149011612
       Shape:
         Alpha: 1
@@ -512,26 +501,21 @@ Visualization Manager:
   Value: true
   Views:
     Current:
-      Class: rviz_default_plugins/Orbit
-      Distance: 3.260326623916626
+      Angle: 0.005000011064112186
+      Class: rviz_default_plugins/TopDownOrtho
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
-      Focal Point:
-        X: 6.907159328460693
-        Y: 1.2446904182434082
-        Z: 1.4603188037872314
-      Focal Shape Fixed Size: true
-      Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.6147964000701904
-      Target Frame: <Fixed Frame>
-      Value: Orbit (rviz_default_plugins)
-      Yaw: 3.2403922080993652
+      Scale: 110.54022979736328
+      Target Frame: base_footprint
+      Value: TopDownOrtho (rviz_default_plugins)
+      X: -0.029541611671447754
+      Y: -0.0744706392288208
     Saved: ~
 Window Geometry:
   Displays:

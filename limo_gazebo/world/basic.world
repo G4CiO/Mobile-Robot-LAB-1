@@ -8,6 +8,7 @@
         <background>
             <color>0 0 0 1</color>
         </background>
+        <shadows>0</shadows>
     </scene>
 
     <include>
@@ -20,6 +21,8 @@
       <surface>
         <friction>
           <ode>
+            <!-- <mu1>1.0</mu1> -->
+            <!-- <mu2>1.0</mu2> -->
             <slip1>0.0</slip1>
             <slip2>0.0</slip2>
           </ode>

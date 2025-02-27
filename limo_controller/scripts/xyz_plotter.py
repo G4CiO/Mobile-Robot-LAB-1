@@ -35,8 +35,8 @@ class OdometryPlotter(Node):
 
         # Matplotlib setup
         self.fig, self.axes = plt.subplots(2, 3, figsize=(12, 8))
-        # self.fig.suptitle('Odometry Comparison with Ground Truth by No Slip condition constraints')
-        self.fig.suptitle('Odometry Comparison with Ground Truth by Bicycle Model')
+        self.fig.suptitle('Odometry Comparison with Ground Truth by No Slip condition constraints')
+        # self.fig.suptitle('Odometry Comparison with Ground Truth by Bicycle Model')
 
     def process_odom(self, msg, key):
         self.data[key]['x'].append(msg.pose.pose.position.x)
