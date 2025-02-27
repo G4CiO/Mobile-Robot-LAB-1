@@ -64,12 +64,13 @@ else:
 
 # Process noise covariance Q (15x15)
 import numpy as np
+
 Q = np.diag([
-    1.0, 1.0, 1.0,  # position noise
-    1.0, 1.0, 1.0,  # orientation noise (rad)
-    1.0, 1.0, 1.0,  # linear velocity noise
-    1.0, 1.0, 1.0,  # angular velocity noise (rad/s)
-    1.0, 1.0, 1.0   # linear acceleration noise
+    0.05, 0.05, 0.05,            # position noise
+    np.deg2rad(0.5), np.deg2rad(0.5), np.deg2rad(0.5),  # orientation noise (rad)
+    0.1, 0.1, 0.1,               # linear velocity noise
+    np.deg2rad(1.0), np.deg2rad(1.0), np.deg2rad(1.0),  # angular velocity noise (rad/s)
+    0.2, 0.2, 0.2                # linear acceleration noise
 ]) ** 2
 
 
