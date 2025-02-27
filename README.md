@@ -139,7 +139,7 @@ First *Spawn robot* by command from LAB 1.1 then
 
 
 ## Sampling Data for R_matrix 
-
+We can determine the value of \( R \) by calculating the covariance of the difference between wheel odometry and ground truth. For the GPS node, we will set \( R \) to match the parameters configured in the GPS node.
 run sampling node 
 ```bash
 ros2 run limo_localization plot_odom.py
@@ -174,4 +174,37 @@ Q = np.diag([
     0.0, 0.0, 0.0   # linear acceleration noise
 ]) ** 2
 ```
+![EKF Image](image/EKF_assume_no_process_noise.png)
 ### result
+```
+Q = np.diag([
+    0.01, 0.01, 0.01,  # position noise
+    0.01, 0.01, 0.01,  # orientation noise (rad)
+    0.01, 0.01, 0.01,  # linear velocity noise
+    0.01, 0.01, 0.01,  # angular velocity noise (rad/s)
+    0.01, 0.01, 0.01   # linear acceleration noise
+]) ** 2
+```
+![EKF Image](image/EKF_ex1.png)
+import numpy as np
+```
+Q = np.diag([
+    0.1, 0.1, 0.1,  # position noise
+    0.1, 0.1, 0.1,  # orientation noise (rad)
+    0.1, 0.1, 0.1,  # linear velocity noise
+    0.1, 0.1, 0.1,  # angular velocity noise (rad/s)
+    0.1, 0.1, 0.1   # linear acceleration noise
+]) ** 2
+```
+![EKF Image](image/EKF_ex2.png)
+```
+Q = np.diag([
+    1.0, 1.0, 1.0,  # position noise
+    1.0, 1.0, 1.0,  # orientation noise (rad)
+    1.0, 1.0, 1.0,  # linear velocity noise
+    1.0, 1.0, 1.0,  # angular velocity noise (rad/s)
+    1.0, 1.0, 1.0   # linear acceleration noise
+]) ** 2
+```
+![EKF Image](image/EKF_ex3.png)
+It can be observed that as we increase the value of  Q , the system tends to rely more on the measurements and becomes overly confident.
