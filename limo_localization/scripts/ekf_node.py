@@ -46,36 +46,37 @@ def load_covariances():
     return data.get("covariances", None)
 
 # Load covariance matrices from YAML using the workspace finder
-# Measurement noise covariance for odometry (12x12): [p (3), v (3), rpy (3), omega (3)]
 covs = load_covariances()
 if covs is not None:
-    # For the EKF odometry update, we use the 'yaw_rate' covariance
-    R_odom = np.array(covs.get("yaw_rate"))
-    print("Loaded R_odom from YAML.")
+    # For the EKF odometry update, we use different covariances for each sensor.
+    R_yaw_rate    = np.array(covs.get("yaw_rate"))
+    R_single_track = np.array(covs.get("single_track"))
+    R_double_track = np.array(covs.get("double_track"))
+    print("Loaded odometry covariances from YAML.")
 else:
-    # Fallback default
-    R_odom = np.diag([
-        0.01, 0.01, 0.01, # Position noise
-        np.deg2rad(1.0), np.deg2rad(1.0), np.deg2rad(1.0), # Orientation noise (radians)
-        0.01, 0.01, 0.01, # Linear velocity noise
-        np.deg2rad(1.0), np.deg2rad(1.0), np.deg2rad(1.0) # Angular velocity noise (rad/s)
+    # Fallback default: use same default for all three (adjust as needed)
+    R_yaw_rate = np.diag([
+        0.01, 0.01, 0.01,  # Position noise
+        np.deg2rad(1.0), np.deg2rad(1.0), np.deg2rad(1.0),  # Orientation noise (radians)
+        0.01, 0.01, 0.01,  # Linear velocity noise
+        np.deg2rad(1.0), np.deg2rad(1.0), np.deg2rad(1.0)   # Angular velocity noise (rad/s)
     ]) ** 2
-    print("!YAML not loaded; using default R_odom.")
+    # For simplicity, we use the same default for single and double track.
+    R_single_track = R_yaw_rate.copy()
+    R_double_track = R_yaw_rate.copy()
+    print("!YAML not loaded; using default odometry covariances.")
 
 # Process noise covariance Q (15x15)
-import numpy as np
-
 Q = np.diag([
-    0.05, 0.05, 0.05,            # position noise
-    np.deg2rad(0.5), np.deg2rad(0.5), np.deg2rad(0.5),  # orientation noise (rad)
-    0.1, 0.1, 0.1,               # linear velocity noise
-    np.deg2rad(1.0), np.deg2rad(1.0), np.deg2rad(1.0),  # angular velocity noise (rad/s)
-    0.2, 0.2, 0.2                # linear acceleration noise
+    0.1, 0.1, 0.1,  # position noise
+    0.1, 0.1, 0.1,  # orientation noise (rad)
+    0.1, 0.1, 0.1,  # linear velocity noise
+    0.1, 0.1, 0.1,  # angular velocity noise (rad/s)
+    0.1, 0.1, 0.1   # linear acceleration noise
 ]) ** 2
 
-
 # Measurement noise covariance for GPS (3x3): [p (3)]
-R_GPS = np.diag([1.0, 1.0, 1.0,]) ** 2
+R_GPS = np.diag([1.0, 1.0, 1.0]) ** 2
 # Measurement noise covariance for IMU (9x9): [orientation (3), angular velocity (3), linear acceleration (3)]
 R_imu = np.diag([
     np.deg2rad(1.0), np.deg2rad(1.0), np.deg2rad(1.0),
@@ -262,6 +263,7 @@ def ekf_update_odom(xEst, PEst, z, R_odom):
     zPred = H @ xEst
     y = z - zPred
 
+    # Normalize the orientation error
     for i in range(3, 6):
         y[i, 0] = normalize_angle(y[i, 0])
         
@@ -279,7 +281,6 @@ def ekf_update_imu(xEst, PEst, z, R_imu):
     H[0:3, 3:6] = np.eye(3)
     H[3:6, 9:12] = np.eye(3)
     H[6:9, 12:15] = np.eye(3)
-    H[8:14] = 0
     zPred = H @ xEst
     y = z - zPred
     
@@ -297,8 +298,7 @@ def ekf_update_imu(xEst, PEst, z, R_imu):
     return xEst_new, PEst_new
 
 def ekf_update_gps(xEst, PEst, z, R_GPS):
-    
-    #fuse only (x,y,z) position
+    # fuse only (x,y,z) position
     H = np.zeros((3, 15))
     H[0:3, 0:3] = np.eye(3)
     zPred = H @ xEst
@@ -316,26 +316,40 @@ class EKFFullNode(Node):
         self.last_time = self.get_clock().now()
         self.xEst = np.zeros((15, 1))
         self.PEst = np.eye(15)
-        self.z_odom = None
-        self.new_odom = False
+        self.u_alpha = np.zeros((3,1))
+        
+        # Measurement containers and flags for three odometry topics
+        self.z_yaw_rate = None
+        self.new_yaw_rate = False
+        self.z_single_track = None
+        self.new_single_track = False
+        self.z_double_track = None
+        self.new_double_track = False
+        
         self.z_imu = None
         self.new_imu = False
         self.z_gps = None
         self.new_gps = False
-        self.u_alpha = np.zeros((3,1))
         
-        self.odom_sub = self.create_subscription(Odometry, '/odometry/yaw_rate', self.odom_callback, 10)
-        self.imu_sub = self.create_subscription(Imu, '/imu', self.imu_callback, 10)
-        self.gps_sub = self.create_subscription(Odometry, '/gps/odom', self.gps_callback, 10)
+        # Subscribers for three odometry topics
+        self.yaw_rate_sub = self.create_subscription(
+            Odometry, '/odometry/yaw_rate', self.yaw_rate_callback, 10)
+        self.single_track_sub = self.create_subscription(
+            Odometry, '/odometry/single_track', self.single_track_callback, 10)
+        self.double_track_sub = self.create_subscription(
+            Odometry, '/odometry/double_track', self.double_track_callback, 10)
+            
+        self.imu_sub = self.create_subscription(
+            Imu, '/imu', self.imu_callback, 10)
+        self.gps_sub = self.create_subscription(
+            Odometry, '/gps/odom', self.gps_callback, 10)
 
-        # *** เปลี่ยน publisher จาก PoseStamped เป็น Odometry ***
-        # เดิม: self.ekf_pub = self.create_publisher(PoseStamped, '/ekf_pose', 10)
+        # Publish using Odometry message
         self.ekf_pub = self.create_publisher(Odometry, '/ekf_odom', 10)
-        # *** สิ้นสุดการเปลี่ยนแปลง publisher ***
-
         self.timer = self.create_timer(self.dt, self.timer_callback)
         
-    def odom_callback(self, msg:Odometry):
+    def yaw_rate_callback(self, msg: Odometry):
+        # Extract odometry similar to your original odom_callback
         px = msg.pose.pose.position.x
         py = msg.pose.pose.position.y
         pz = msg.pose.pose.position.z
@@ -352,13 +366,61 @@ class EKFFullNode(Node):
         wy = msg.twist.twist.angular.y
         wz = msg.twist.twist.angular.z
 
-        self.z_odom = np.array([[px], [py], [pz],
-                                [roll], [pitch], [yaw],
-                                [vx], [vy], [vz],
-                                [wx], [wy], [wz]])
-        self.new_odom = True
+        self.z_yaw_rate = np.array([[px], [py], [pz],
+                                    [roll], [pitch], [yaw],
+                                    [vx], [vy], [vz],
+                                    [wx], [wy], [wz]])
+        self.new_yaw_rate = True
 
-    def imu_callback(self, msg):
+    def single_track_callback(self, msg: Odometry):
+        # Process single track odometry similar to yaw_rate
+        px = msg.pose.pose.position.x
+        py = msg.pose.pose.position.y
+        pz = msg.pose.pose.position.z
+
+        q = msg.pose.pose.orientation
+        quat = [q.x, q.y, q.z, q.w]
+        (roll, pitch, yaw) = euler_from_quaternion(quat)
+
+        vx = msg.twist.twist.linear.x
+        vy = msg.twist.twist.linear.y
+        vz = msg.twist.twist.linear.z
+
+        wx = msg.twist.twist.angular.x
+        wy = msg.twist.twist.angular.y
+        wz = msg.twist.twist.angular.z
+
+        self.z_single_track = np.array([[px], [py], [pz],
+                                        [roll], [pitch], [yaw],
+                                        [vx], [vy], [vz],
+                                        [wx], [wy], [wz]])
+        self.new_single_track = True
+
+    def double_track_callback(self, msg: Odometry):
+        # Process double track odometry similar to yaw_rate
+        px = msg.pose.pose.position.x
+        py = msg.pose.pose.position.y
+        pz = msg.pose.pose.position.z
+
+        q = msg.pose.pose.orientation
+        quat = [q.x, q.y, q.z, q.w]
+        (roll, pitch, yaw) = euler_from_quaternion(quat)
+
+        vx = msg.twist.twist.linear.x
+        vy = msg.twist.twist.linear.y
+        vz = msg.twist.twist.linear.z
+
+        wx = msg.twist.twist.angular.x
+        wy = msg.twist.twist.angular.y
+        wz = msg.twist.twist.angular.z
+
+        self.z_double_track = np.array([[px], [py], [pz],
+                                        [roll], [pitch], [yaw],
+                                        [vx], [vy], [vz],
+                                        [wx], [wy], [wz]])
+        self.new_double_track = True
+        
+    def imu_callback(self, msg: Imu):
         q = msg.orientation
         quat = [q.x, q.y, q.z, q.w]
         (roll, pitch, yaw) = euler_from_quaternion(quat)
@@ -375,7 +437,7 @@ class EKFFullNode(Node):
         ])
         self.new_imu = True
         
-    def gps_callback(self, msg:Odometry):
+    def gps_callback(self, msg: Odometry):
         # update only position
         px = msg.pose.pose.position.x
         py = msg.pose.pose.position.y
@@ -390,13 +452,22 @@ class EKFFullNode(Node):
             dt = self.dt
         self.last_time = current_time
         
-        self.xEst, self.PEst = ekf_predict(self.xEst, self.PEst, dt, Q, R_from_euler, J_from_euler,
-                                           dR_droll, dR_dpitch, dR_dyaw,
-                                           dJ_droll, dJ_dpitch, dJ_dyaw, self.u_alpha)
+        self.xEst, self.PEst = ekf_predict(
+            self.xEst, self.PEst, dt, Q, R_from_euler, J_from_euler,
+            dR_droll, dR_dpitch, dR_dyaw, dJ_droll, dJ_dpitch, dJ_dyaw, self.u_alpha)
         
-        if self.new_odom and self.z_odom is not None:
-            self.xEst, self.PEst = ekf_update_odom(self.xEst, self.PEst, self.z_odom, R_odom)
-            self.new_odom = False
+        # Update with each odometry measurement if available.
+        if self.new_yaw_rate and self.z_yaw_rate is not None:
+            self.xEst, self.PEst = ekf_update_odom(self.xEst, self.PEst, self.z_yaw_rate, R_yaw_rate)
+            self.new_yaw_rate = False
+        if self.new_single_track and self.z_single_track is not None:
+            self.xEst, self.PEst = ekf_update_odom(self.xEst, self.PEst, self.z_single_track, R_single_track)
+            self.new_single_track = False
+        if self.new_double_track and self.z_double_track is not None:
+            self.xEst, self.PEst = ekf_update_odom(self.xEst, self.PEst, self.z_double_track, R_double_track)
+            self.new_double_track = False
+        
+        # Optionally update with IMU and GPS data
         # if self.new_imu and self.z_imu is not None:
         #     self.xEst, self.PEst = ekf_update_imu(self.xEst, self.PEst, self.z_imu, R_imu)
         #     self.new_imu = False
@@ -407,18 +478,18 @@ class EKFFullNode(Node):
         self.publish_estimate()
         
     def publish_estimate(self):
-        # *** เปลี่ยนวิธี publish จาก PoseStamped เป็น Odometry ***
+        # Publish updated estimate as Odometry
         odom_msg = Odometry()
         odom_msg.header.stamp = self.get_clock().now().to_msg()
         odom_msg.header.frame_id = "odom"
-        odom_msg.child_frame_id = "base_link"  # ระบุ child frame ตามที่ต้องการ
+        odom_msg.child_frame_id = "base_link"  # Adjust as needed
 
-        # กำหนดตำแหน่งจาก state vector
+        # Set position from state vector
         odom_msg.pose.pose.position.x = self.xEst[0, 0]
         odom_msg.pose.pose.position.y = self.xEst[1, 0]
         odom_msg.pose.pose.position.z = self.xEst[2, 0]
 
-        # แปลง Euler angles (roll, pitch, yaw) เป็น quaternion
+        # Convert Euler angles (roll, pitch, yaw) to quaternion
         roll = self.xEst[3, 0]
         pitch = self.xEst[4, 0]
         yaw = self.xEst[5, 0]
@@ -428,7 +499,7 @@ class EKFFullNode(Node):
         odom_msg.pose.pose.orientation.z = q[2]
         odom_msg.pose.pose.orientation.w = q[3]
 
-        # กำหนดความเร็ว (linear และ angular) จาก state vector
+        # Set linear and angular velocities from state vector
         odom_msg.twist.twist.linear.x = self.xEst[6, 0]
         odom_msg.twist.twist.linear.y = self.xEst[7, 0]
         odom_msg.twist.twist.linear.z = self.xEst[8, 0]
@@ -436,19 +507,16 @@ class EKFFullNode(Node):
         odom_msg.twist.twist.angular.y = self.xEst[10, 0]
         odom_msg.twist.twist.angular.z = self.xEst[11, 0]
 
-        # --- Add updated covariance for position x and y ---
-        # The odometry message expects a 6x6 covariance matrix flattened into a 36-element list.
-        # Here, we only update the covariance for x and y (positions indices 0 and 1).
+        # Update covariance for x and y (flattened 6x6 covariance matrix)
         cov = np.zeros((6,6))
         cov[0,0] = self.PEst[0, 0]  # Variance for x
-        cov[0,1] = self.PEst[0, 1]  # Covariance between x and y
-        cov[1,0] = self.PEst[1, 0]  # Covariance between y and x
+        cov[0,1] = self.PEst[0, 1]  # Covariance x-y
+        cov[1,0] = self.PEst[1, 0]  # Covariance y-x
         cov[1,1] = self.PEst[1, 1]  # Variance for y
         odom_msg.pose.covariance = cov.flatten().tolist()
-        print(f'current Px: {self.PEst[0, 0]}, Py: {self.PEst[1, 1]}')
-        # Publish Odometry message
+        print(f'Current Px variance: {self.PEst[0, 0]}, Py variance: {self.PEst[1, 1]}')
+        
         self.ekf_pub.publish(odom_msg)
-        # *** สิ้นสุดการเปลี่ยนแปลง publish message ***
         
 def main(args=None):
     rclpy.init(args=args)

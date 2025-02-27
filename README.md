@@ -144,6 +144,10 @@ run sampling node
 ```bash
 ros2 run limo_localization plot_odom.py
 ```
+then follow by controller (you can switch to other controller if you want)
+```bash
+ros2 run limo_controller controller_server.py --ros-args -p control_mode:=pure_pursuit
+```
 for stop sampling data 
 ```bash
 ros2 topic pub --once /stop_collection std_msgs/Empty "{}"
