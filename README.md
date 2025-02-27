@@ -150,7 +150,7 @@ ros2 topic pub --once /stop_collection std_msgs/Empty "{}"
 ```
 ## Images
 
-![Robot Image](image/multi_odom_plot.png)
+![EKF Image](image/multi_odom_plot.png)
 
 stop dianosist
 ```bash
@@ -160,3 +160,18 @@ ros2 topic pub /stop_collection std_msgs/msg/Empty "{}" --once
 After obtaining the value of 
 𝑅, the next step is tuning the value of 
 𝑄. In this process, we will use the trial-and-error method while observing the 95% confidence interval. The goal is to prevent the EKF from becoming overconfident or diverging from the true values.
+
+## Overconfident estimator
+![EKF Image](image/EKF_overconfident_case.png)
+
+### Assume No process noise
+```
+Q = np.diag([
+    0.0, 0.0, 0.0,  # position noise
+    0.0, 0.0, 0.0,  # orientation noise (rad)
+    0.0, 0.0, 0.0,  # linear velocity noise
+    0.0, 0.0, 0.0,  # angular velocity noise (rad/s)
+    0.0, 0.0, 0.0   # linear acceleration noise
+]) ** 2
+```
+### result

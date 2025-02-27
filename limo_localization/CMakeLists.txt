@@ -32,6 +32,7 @@ install(PROGRAMS
   scripts/ekf_node.py
   scripts/fake_gps_node.py
   scripts/ekf_diagnostics.py
+  scripts/ekf_confident.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
