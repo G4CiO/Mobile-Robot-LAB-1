@@ -138,7 +138,7 @@ First *Spawn robot* by command from LAB 1.1 then
 - Too-large R makes the filter rely excessively on the model, slowing its response to real measurements.
 
 
-## Sampling Data for Covarian calculation
+## Sampling Data for R_matrix 
 
 run sampling node 
 ```bash
@@ -156,3 +156,7 @@ stop dianosist
 ```bash
 ros2 topic pub /stop_collection std_msgs/msg/Empty "{}" --once
 ```
+
+After obtaining the value of 
+𝑅, the next step is tuning the value of 
+𝑄. In this process, we will use the trial-and-error method while observing the 95% confidence interval. The goal is to prevent the EKF from becoming overconfident or diverging from the true values.

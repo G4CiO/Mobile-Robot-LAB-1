@@ -83,6 +83,18 @@ def generate_launch_description():
         executable="path_publisher.py",
         name="path_publisher"
     )
+    
+    gps_node = Node(
+        package="limo_localization",
+        executable="fake_gps_node.py",
+        name="gps_node"
+    )
+    
+    ekf_node = Node(
+        package="limo_localization",
+        executable="ekf_node.py",
+        name="ekf_node"
+    )
 
     launch_description = LaunchDescription()
     launch_description.add_action(steering_mode_arg)
@@ -92,5 +104,7 @@ def generate_launch_description():
     launch_description.add_action(odometry_calculation)
     # launch_description.add_action(controller_server)
     launch_description.add_action(path_publisher)
+    launch_description.add_action(gps_node)
+    launch_description.add_action(ekf_node)
     
     return launch_description

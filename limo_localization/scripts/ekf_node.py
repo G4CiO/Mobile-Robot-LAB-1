@@ -64,15 +64,15 @@ else:
 
 # Process noise covariance Q (15x15)
 Q = np.diag([
-    0.05, 0.05, 0.05,            # position noise
+    0.1, 0.1, 0.1,            # position noise
     np.deg2rad(1.0), np.deg2rad(1.0), np.deg2rad(1.0),  # orientation noise (rad)
     0.1, 0.1, 0.1,               # linear velocity noise
     np.deg2rad(0.5), np.deg2rad(0.5), np.deg2rad(0.5),  # angular velocity noise (rad/s)
     0.2, 0.2, 0.2                # linear acceleration noise
 ]) ** 2
 
-# Measurement noise covariance for GPS (6x6): [p (3), v (3)]
-R_GPS = np.diag([1.0, 1.0, 1.0, 0.0, 0.0, 0.0]) ** 2
+# Measurement noise covariance for GPS (3x3): [p (3)]
+R_GPS = np.diag([1.0, 1.0, 1.0,]) ** 2
 # Measurement noise covariance for IMU (9x9): [orientation (3), angular velocity (3), linear acceleration (3)]
 R_imu = np.diag([
     np.deg2rad(1.0), np.deg2rad(1.0), np.deg2rad(1.0),
@@ -294,9 +294,10 @@ def ekf_update_imu(xEst, PEst, z, R_imu):
     return xEst_new, PEst_new
 
 def ekf_update_gps(xEst, PEst, z, R_GPS):
-    H = np.zeros((6, 15))
+    
+    #fuse only (x,y,z) position
+    H = np.zeros((3, 15))
     H[0:3, 0:3] = np.eye(3)
-    H[3:6, 6:9] = np.eye(3)
     zPred = H @ xEst
     y = z - zPred
     S = H @ PEst @ H.T + R_GPS
@@ -372,13 +373,11 @@ class EKFFullNode(Node):
         self.new_imu = True
         
     def gps_callback(self, msg:Odometry):
+        # update only position
         px = msg.pose.pose.position.x
         py = msg.pose.pose.position.y
         pz = msg.pose.pose.position.z
-        vx = msg.twist.twist.linear.x
-        vy = msg.twist.twist.linear.y
-        vz = msg.twist.twist.linear.z
-        self.z_gps = np.array([[px], [py], [pz], [vx], [vy], [vz]])
+        self.z_gps = np.array([[px], [py], [pz]])
         self.new_gps = True
         
     def timer_callback(self):
@@ -434,6 +433,16 @@ class EKFFullNode(Node):
         odom_msg.twist.twist.angular.y = self.xEst[10, 0]
         odom_msg.twist.twist.angular.z = self.xEst[11, 0]
 
+        # --- Add updated covariance for position x and y ---
+        # The odometry message expects a 6x6 covariance matrix flattened into a 36-element list.
+        # Here, we only update the covariance for x and y (positions indices 0 and 1).
+        cov = np.zeros((6,6))
+        cov[0,0] = self.PEst[0, 0]  # Variance for x
+        cov[0,1] = self.PEst[0, 1]  # Covariance between x and y
+        cov[1,0] = self.PEst[1, 0]  # Covariance between y and x
+        cov[1,1] = self.PEst[1, 1]  # Variance for y
+        odom_msg.pose.covariance = cov.flatten().tolist()
+        print(f'current Px: {self.PEst[0, 0]}, Py: {self.PEst[1, 1]}')
         # Publish Odometry message
         self.ekf_pub.publish(odom_msg)
         # *** สิ้นสุดการเปลี่ยนแปลง publish message ***
