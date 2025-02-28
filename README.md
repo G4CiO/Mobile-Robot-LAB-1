@@ -170,7 +170,7 @@ where:
 
 The EKF requires a **covariance matrix** to model uncertainty in these state estimates.
 
-## 3. Sample Mean Computation
+## 1. Sample Mean Computation
 
 Given a set of **N** state vectors $\{X_1, X_2, \dots, X_N\}$, the sample mean $\mu$ is computed as:
 
@@ -180,7 +180,7 @@ Given a set of **N** state vectors $\{X_1, X_2, \dots, X_N\}$, the sample mean $
 
 where $\mu$ is the **mean state vector**, representing the average of all odometry estimates.
 
-## 4. Covariance Matrix Computation
+## 2. Covariance Matrix Computation
 
 The covariance matrix $\Sigma$ quantifies the **spread and correlation** of the state estimates and is computed as:
 
@@ -199,7 +199,7 @@ where:
 - $\mu_j$ is the mean of the **j-th state variable**.
 - $\Sigma_{jk}$ captures how **state variable $j$ correlates with variable $k$**.
 
-## 5. Computation Process
+## 3. Computation Process
 
 1. **Load recorded odometry data** from the CSV file.
 2. **Extract ground truth and odometry estimates** for each state variable.
@@ -214,7 +214,7 @@ where:
 4. **Compute the covariance matrix** using the error vectors.
 5. **Save covariance matrices** to a YAML file for EKF use.
 
-## 6. YAML Output Format
+## 4. YAML Output Format
 
 The computed covariance matrices are stored in a **YAML file** for integration with the EKF node. Example format:
 
@@ -289,3 +289,5 @@ Q = np.diag([
 ![EKF Image](image/EKF_ex3.png)
 It can be observed that as we increase the value of  Q , the system tends to rely more on the measurements and becomes overly confident.
 
+## comparision of fusion type with GPS
+![EKF Image](image/EKF_compare_all_fusion_type.png)

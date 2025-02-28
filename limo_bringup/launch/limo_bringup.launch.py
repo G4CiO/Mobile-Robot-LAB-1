@@ -105,6 +105,6 @@ def generate_launch_description():
     # launch_description.add_action(controller_server)
     launch_description.add_action(path_publisher)
     launch_description.add_action(gps_node)
-    launch_description.add_action(ekf_node)
+    # launch_description.add_action(ekf_node)
     
     return launch_description
