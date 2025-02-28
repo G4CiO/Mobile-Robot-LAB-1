@@ -242,7 +242,8 @@ After obtaining the value of
 𝑄. In this process, we will use the trial-and-error method while observing the 95% confidence interval. The goal is to prevent the EKF from becoming overconfident or diverging from the true values.
 
 ## Overconfident estimator
-![EKF Image](image/EKF_overconfident_case.png)
+
+<img src="image/EKF_overconfident_case.png" alt="EKF Image" width="400"/>
 
 ### Assume No process noise
 ```
@@ -254,7 +255,7 @@ Q = np.diag([
     0.0, 0.0, 0.0   # linear acceleration noise
 ]) ** 2
 ```
-![EKF Image](image/EKF_assume_no_process_noise.png)
+<img src="image/EKF_assume_no_process_noise.png" alt="EKF Image" width="400"/>
 
 ```
 Q = np.diag([
@@ -265,7 +266,7 @@ Q = np.diag([
     0.01, 0.01, 0.01   # linear acceleration noise
 ]) ** 2
 ```
-![EKF Image](image/EKF_ex1.png)
+<img src="image/EKF_ex1.png" alt="EKF Image" width="400"/>
 
 ```
 Q = np.diag([
@@ -276,7 +277,8 @@ Q = np.diag([
     0.1, 0.1, 0.1   # linear acceleration noise
 ]) ** 2
 ```
-![EKF Image](image/EKF_ex2.png)
+<img src="image/EKF_ex2.png" alt="EKF Image" width="400"/>
+
 ```
 Q = np.diag([
     1.0, 1.0, 1.0,  # position noise
@@ -286,7 +288,8 @@ Q = np.diag([
     1.0, 1.0, 1.0   # linear acceleration noise
 ]) ** 2
 ```
-![EKF Image](image/EKF_ex3.png)
+<img src="image/EKF_ex3.png" alt="EKF Image" width="400"/>
+
 It can be observed that as we increase the value of  Q , the system tends to rely more on the measurements and becomes overly confident.
 
 ## comparision of fusion type with GPS
