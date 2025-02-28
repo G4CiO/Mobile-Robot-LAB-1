@@ -241,10 +241,6 @@ After obtaining the value of
 𝑅, the next step is tuning the value of 
 𝑄. In this process, we will use the trial-and-error method while observing the 95% confidence interval. The goal is to prevent the EKF from becoming overconfident or diverging from the true values.
 
-## Overconfident estimator
-
-<img src="image/EKF_overconfident_case.png" alt="EKF Image" width="400"/>
-
 ### Assume No process noise
 ```
 Q = np.diag([
@@ -321,4 +317,4 @@ Q = np.diag([
 It can be observed that as we increase the value of  Q , the system tends to rely more on the measurements and becomes overly confident.
 
 ## comparision of fusion type with GPS
-![EKF Image](image/EKF_compare_all_fusion_type.png)
+![EKF Image](image/EKF_V2_compare.png)
