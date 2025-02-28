@@ -1,0 +1,236 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="ackbot">
+
+    <xacro:include filename="gazebo.xacro"/>
+    <xacro:include filename="imu.xacro"/>
+    <xacro:include filename="transmission.xacro"/>
+
+
+    <!-- BASE LINK -->
+
+    <link name="base_footprint">
+
+    </link>
+
+    <!-- base_link LINK -->
+
+    <joint name="base_joint" type="fixed">
+        <parent link="base_footprint"/>
+        <child link="base_link"/>
+        <origin xyz="0 0 0.045"/>
+    </joint>
+
+    <link name="base_link">
+        <xacro:inertial_box mass="3" x="0.2" y="0.13" z="0.06">
+            <origin xyz="0 0 0.025" rpy="0 0 0"/>
+        </xacro:inertial_box>
+        <visual>
+            <origin xyz="0 0 0.025" rpy="0 0 0" />
+            <geometry>
+                <!-- <mesh filename="file:///$(find ack_description)/meshes/Body.STL"/> -->
+                <box size="0.2 0.13 0.05"/>
+            </geometry>
+            <material name="Red">
+                <color rgba="1 0 0 1"/>
+            </material>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0.025" rpy="0 0 0" />
+            <geometry>
+                <box size="0.2 0.13 0.06"/>
+            </geometry>
+        </collision>
+    </link>
+
+    <!-- WHEEL LINK -->
+
+    <link name="rear_right_wheel_link">
+        <xacro:inertial_cylinder mass="0.1" length="0.01" radius="0.045">
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+        </xacro:inertial_cylinder>
+        <visual>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <geometry>
+                <!-- <mesh filename="file:///$(find ack_description)/meshes/Wheel.STL" /> -->
+                <cylinder radius="0.045" length="0.01"/>
+                <material name="Black">
+                    <color rgba="0 0 0 1"/>
+                </material>
+            </geometry>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <geometry>
+                <!-- <mesh filename="file:///$(find ack_description)/meshes/Wheel.STL" /> -->
+                <cylinder radius="0.045" length="0.01"/>
+            </geometry>
+        </collision>
+    </link>
+
+    <link name="rear_left_wheel_link">
+        <xacro:inertial_cylinder mass="0.1" length="0.01" radius="0.045">
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+        </xacro:inertial_cylinder>
+        <visual>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <geometry>
+                <!-- <mesh filename="file:///$(find ack_description)/meshes/Wheel.STL" /> -->
+                <cylinder radius="0.045" length="0.01"/>
+                <material name="Black">
+                    <color rgba="0 0 0 1"/>
+                </material>
+            </geometry>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <geometry>
+                <!-- <mesh filename="file:///$(find ack_description)/meshes/Wheel.STL" /> -->
+                <cylinder radius="0.045" length="0.01"/>
+            </geometry>
+        </collision>
+    </link>
+
+    <link name="front_right_wheel_link">
+        <xacro:inertial_cylinder mass="0.1" length="0.01" radius="0.045">
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+        </xacro:inertial_cylinder>
+        <visual>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <geometry>
+                <!-- <mesh filename="file:///$(find ack_description)/meshes/Wheel.STL" /> -->
+                <cylinder radius="0.045" length="0.01"/>
+            </geometry>
+            <material name="Black">
+                <color rgba="0 0 0 1"/>
+            </material>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <geometry>
+                <!-- <mesh filename="file:///$(find ack_description)/meshes/Wheel.STL" /> -->
+                <cylinder radius="0.045" length="0.01"/>
+            </geometry>
+        </collision>
+    </link>
+
+    <link name="front_left_wheel_link">
+        <xacro:inertial_cylinder mass="0.1" length="0.01" radius="0.045">
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+        </xacro:inertial_cylinder>
+        <visual>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <geometry>
+                <!-- <mesh filename="file:///$(find ack_description)/meshes/Wheel.STL" /> -->
+                <cylinder radius="0.045" length="0.01"/>
+                <material name="Black">
+                    <color rgba="0 0 0 1"/>
+                </material>
+            </geometry>
+        </visual>   
+        <collision>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <geometry>
+                <!-- <mesh filename="file:///$(find ack_description)/meshes/Wheel.STL" /> -->
+                <cylinder radius="0.045" length="0.01"/>
+            </geometry>
+        </collision>
+    </link>
+
+    <link name="right_steering_hinge">
+        <xacro:inertial_flip_cylinder mass="0.1" length="0.01" radius="0.045">
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+        </xacro:inertial_flip_cylinder>
+    </link>
+    <link name="left_steering_hinge">
+        <xacro:inertial_flip_cylinder mass="0.1" length="0.01" radius="0.045">
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+        </xacro:inertial_flip_cylinder>
+    </link>
+
+    <!-- WHEEL JOINT -->
+
+    <joint name="rear_left_wheel" type="continuous">
+        <origin xyz="-0.1 0.07 0" rpy="-1.57079632679 0 0" />
+        <parent link="base_link" />
+        <child link="rear_left_wheel_link" />
+        <axis xyz="0 0 1" />
+        <limit 
+            effort="10.0" 
+            lower="-3.14159265359" 
+            upper="3.14159265359" 
+            velocity="20.0"
+            />
+    </joint>
+
+    <joint name="rear_right_wheel" type="continuous">
+        <origin xyz="-0.1 -0.07 0" rpy="-1.57079632679 0 0" />
+        <parent link="base_link" />
+        <child link="rear_right_wheel_link" />
+        <axis xyz="0 0 1" />
+        <limit 
+            effort="10.0" 
+            lower="-3.14159265359" 
+            upper="3.14159265359" 
+            velocity="20.0"
+            />
+    </joint>
+
+    <joint name="left_steering_hinge_wheel" type="revolute">
+        <origin xyz="0.1 0.07 0" rpy="0 0 0" />
+        <parent link="base_link" />
+        <child link="left_steering_hinge" />
+        <axis xyz="0 0 1" />
+        <limit 
+            effort="10.00" 
+            lower="-0.60" 
+            upper="0.60" 
+            velocity="10.00"/>
+    </joint>
+
+    <joint name="front_left_wheel" type="continuous">
+        <origin xyz="0 0 0" rpy="-1.57079632679 0 0" />
+        <parent link="left_steering_hinge" />
+        <child link="front_left_wheel_link" />
+        <axis xyz="0 0 1" />
+        <limit 
+            effort="10.0" 
+            lower="-3.14159265359" 
+            upper="3.14159265359" 
+            velocity="20.0"
+            />
+    </joint>
+
+    <joint name="right_steering_hinge_wheel" type="revolute">
+        <origin xyz="0.1 -0.07 0" rpy="0 0 0" />
+        <parent link="base_link" />
+        <child link="right_steering_hinge" />
+        <axis xyz="0 0 1" />
+        <limit 
+            effort="10.00" 
+            lower="-0.60" 
+            upper="0.60" 
+            velocity="10.00"/>
+    </joint>
+
+    <joint name="front_right_wheel" type="continuous">
+        <origin xyz="0 0 0" rpy="-1.57079632679 0 0" />
+        <parent link="right_steering_hinge" />
+        <child link="front_right_wheel_link" />
+        <axis xyz="0 0 1" />
+        <limit 
+            effort="10.0" 
+            lower="-3.14159265359" 
+            upper="3.14159265359" 
+            velocity="20.0"
+            />
+    </joint>
+
+    <!-- TRANSMISSIONS -->
+    <xacro:wheel_transmission wheel_prefix="left_front"/>
+    <xacro:wheel_transmission wheel_prefix="right_front"/>
+    <xacro:wheel_transmission wheel_prefix="left_rear"/>
+    <xacro:wheel_transmission wheel_prefix="right_rear"/>
+    <xacro:steering_hinge_transmission wheel_prefix="left"/>
+    <xacro:steering_hinge_transmission wheel_prefix="right"/>
+
+</robot>

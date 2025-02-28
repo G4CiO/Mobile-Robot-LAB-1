@@ -111,7 +111,7 @@
         <mu1 value="10"/>
         <mu2 value="10"/>
         <kp value="10000000.0" />
-        <kd value="0" />
+        <kd value="0"/>
         <fdir1 value="1 0 0"/>
         <minDepth value="0.001" />
         <maxContacts value="64"/>
@@ -120,7 +120,7 @@
     <gazebo reference="base_link">
         <minDepth>0.001</minDepth>
         <kp  value="10000000.0"/>
-        <kd  value="0"/>
+        <kd value="0"/>
     </gazebo>
 
     <gazebo reference="front_left_wheel_link">
@@ -129,7 +129,7 @@
         <mu2>10.0</mu2>
         <minDepth>0.001</minDepth>
         <kp  value="10000000.0"/>
-        <kd  value="0"/>
+        <kd value="0"/>
     </gazebo>
 
     <gazebo reference="front_right_wheel_link">
@@ -138,7 +138,7 @@
         <mu2>10.0</mu2>
         <minDepth>0.001</minDepth>
         <kp  value="10000000.0"/>
-        <kd  value="0"/>
+        <kd value="0"/>
     </gazebo>
 
     <gazebo reference="rear_left_wheel_link">
@@ -147,7 +147,7 @@
         <mu2>10.0</mu2>
         <minDepth>0.001</minDepth>
         <kp  value="10000000.0"/>
-        <kd  value="0"/>
+        <kd value="0"/>
     </gazebo>
 
     <gazebo reference="rear_right_wheel_link">
@@ -156,7 +156,7 @@
         <mu2>10.0</mu2>
         <minDepth>0.001</minDepth>
         <kp  value="10000000.0"/>
-        <kd  value="0"/>
+        <kd value="0"/>
     </gazebo>
 
 </robot>

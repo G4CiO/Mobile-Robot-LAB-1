@@ -21,9 +21,10 @@
       <surface>
         <friction>
           <ode>
-            <!-- <mu1>1.0</mu1> -->
-            <!-- <mu2>1.0</mu2> -->
-            <slip1>0.0</slip1>
+            <mu>1.0</mu>       <!-- Primary friction coefficient -->
+            <mu2>1.0</mu2>     <!-- Secondary friction coefficient -->
+            <fdir1>1 0 0</fdir1> <!-- Friction direction (optional) -->
+            <slip1>0.0</slip1> <!-- Reducing slip -->
             <slip2>0.0</slip2>
           </ode>
         </friction>
@@ -153,7 +154,7 @@
     </light>
 
 
-        <plugin name="gazebo_ros_state" filename="libgazebo_ros_state.so">
+      <plugin name="gazebo_ros_state" filename="libgazebo_ros_state.so">
       <ros>
         <namespace>/gazebo</namespace>
       </ros>

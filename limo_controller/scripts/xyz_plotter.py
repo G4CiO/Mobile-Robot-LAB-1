@@ -24,19 +24,18 @@ class OdometryPlotter(Node):
 
         # Data storage
         self.data = {
-            'ground_truth': {'x': [], 'y': [], 'yaw': []},
-            'yaw_rate': {'x': [], 'y': [], 'yaw': []},
-            'single_track': {'x': [], 'y': [], 'yaw': []},
-            'double_track': {'x': [], 'y': [], 'yaw': []}
+            'ground_truth': {'x': [], 'y': [], 'yaw': [], 'ang_z': []},
+            'yaw_rate': {'x': [], 'y': [], 'yaw': [], 'ang_z': []},
+            'single_track': {'x': [], 'y': [], 'yaw': [], 'ang_z': []},
+            'double_track': {'x': [], 'y': [], 'yaw': [], 'ang_z': []}
         }
 
         # Timer
         self.timer = self.create_timer(self.update_rate, self.update_plot)
 
         # Matplotlib setup
-        self.fig, self.axes = plt.subplots(2, 3, figsize=(12, 8))
-        self.fig.suptitle('Odometry Comparison with Ground Truth by No Slip condition constraints')
-        # self.fig.suptitle('Odometry Comparison with Ground Truth by Bicycle Model')
+        self.fig, self.axes = plt.subplots(1, 3, figsize=(15, 5))
+        self.fig.suptitle('Odometry Comparison with Ground Truth')
 
     def process_odom(self, msg, key):
         self.data[key]['x'].append(msg.pose.pose.position.x)
@@ -44,6 +43,7 @@ class OdometryPlotter(Node):
         quat = msg.pose.pose.orientation
         _, _, yaw = euler_from_quaternion([quat.x, quat.y, quat.z, quat.w])
         self.data[key]['yaw'].append(yaw)
+        self.data[key]['ang_z'].append(msg.twist.twist.angular.z)
 
     def callback_ground_truth(self, msg):
         self.process_odom(msg, 'ground_truth')
@@ -58,29 +58,37 @@ class OdometryPlotter(Node):
         self.process_odom(msg, 'double_track')
 
     def update_plot(self):
-        for ax in self.axes.flatten():
+        for ax in self.axes:
             ax.clear()
 
-        labels = ['Yaw Rate', 'Single Track', 'Double Track']
-        keys = ['yaw_rate', 'single_track', 'double_track']
-        colors = ['red', 'green', 'purple']
+        labels = ['Ground Truth', 'Yaw Rate', 'Single Track', 'Double Track']
+        keys = ['ground_truth', 'yaw_rate', 'single_track', 'double_track']
+        colors = ['blue', 'red', 'green', 'purple']
+        styles = ['-', '--', '--', '--']
 
-        for i, (label, key, color) in enumerate(zip(labels, keys, colors)):
-            # XY Position
-            self.axes[0][i].plot(self.data['ground_truth']['x'], self.data['ground_truth']['y'], label='Ground Truth', linestyle='-', color='blue')
-            self.axes[0][i].plot(self.data[key]['x'], self.data[key]['y'], label=label, linestyle=':', color=color)
-            self.axes[0][i].set_title(f'Ground Truth vs {label} (XY)')
-            self.axes[0][i].set_xlabel('X Coordinate')
-            self.axes[0][i].set_ylabel('Y Coordinate')
-            self.axes[0][i].legend()
+        # XY Position
+        for key, label, color, style in zip(keys, labels, colors, styles):
+            self.axes[0].plot(self.data[key]['x'], self.data[key]['y'], label=label, linestyle=style, color=color)
+        self.axes[0].set_title('XY Position')
+        self.axes[0].set_xlabel('X Coordinate')
+        self.axes[0].set_ylabel('Y Coordinate')
+        self.axes[0].legend()
 
-            # Orientation (Yaw)
-            self.axes[1][i].plot(self.data['ground_truth']['yaw'], label='Ground Truth', linestyle='-', color='blue')
-            self.axes[1][i].plot(self.data[key]['yaw'], label=label, linestyle=':', color=color)
-            self.axes[1][i].set_title(f'Ground Truth vs {label} (Yaw)')
-            self.axes[1][i].set_xlabel('Time Step')
-            self.axes[1][i].set_ylabel('Yaw (rad)')
-            self.axes[1][i].legend()
+        # Orientation (Yaw)
+        for key, label, color, style in zip(keys, labels, colors, styles):
+            self.axes[1].plot(self.data[key]['yaw'], label=label, linestyle=style, color=color)
+        self.axes[1].set_title('Orientation (Yaw)')
+        self.axes[1].set_xlabel('Time Step')
+        self.axes[1].set_ylabel('Yaw (rad)')
+        self.axes[1].legend()
+
+        # Angular Velocity Z
+        for key, label, color, style in zip(keys, labels, colors, styles):
+            self.axes[2].plot(self.data[key]['ang_z'], label=label, linestyle=style, color=color)
+        self.axes[2].set_title('Angular Velocity Z')
+        self.axes[2].set_xlabel('Time Step')
+        self.axes[2].set_ylabel('Angular Velocity Z (rad/s)')
+        self.axes[2].legend()
 
         plt.pause(0.001)
 
@@ -91,7 +99,7 @@ class OdometryPlotter(Node):
         self.get_logger().info('Plots saved as odometry_comparison.png')
 
     def destroy_node(self):
-        # self.save_plots()
+        self.save_plots()
         super().destroy_node()
 
 

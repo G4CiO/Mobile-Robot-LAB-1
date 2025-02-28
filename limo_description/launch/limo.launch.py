@@ -25,8 +25,9 @@ import xacro
 def generate_launch_description():
     
     pkg = get_package_share_directory('limo_description')
-    
-    path_description = os.path.join(pkg,'urdf','limo.xacro')
+    # pkg = get_package_share_directory('lab1_robot_description')
+
+    path_description = os.path.join(pkg,'urdf','robot.xacro')
     robot_desc_xml = xacro.process_file(path_description).toxml()
     #robot_desc_xml = xacro.process_file(path_description,mappings={'robot_name': namespace}).toxml()
     

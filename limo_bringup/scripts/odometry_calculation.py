@@ -12,6 +12,7 @@ from nav_msgs.msg import Path
 from geometry_msgs.msg import TransformStamped, Vector3
 from std_srvs.srv import Empty
 from tf2_ros.static_transform_broadcaster import StaticTransformBroadcaster
+from std_msgs.msg import Float64MultiArray
 
 class OdometryCalcurationNode(Node):
     def __init__(self):
@@ -31,6 +32,7 @@ class OdometryCalcurationNode(Node):
         # State variables
         self.v_rl = 0.0
         self.v_rr = 0.0
+        self.v_avr = 0.0
         self.delta_L = 0.0
         self.delta_R = 0.0
         self.v = 0.0
@@ -40,7 +42,7 @@ class OdometryCalcurationNode(Node):
         self.off_x = 9.073496746393584
         self.off_yaw = 1.5700039414375448
 
-        self.x_curr = 0.0 # m
+        self.x_curr = self.off_x # m
         self.x_prev = self.off_x # m
         self.y_curr = 0.0 # m
         self.y_prev = 0.0 # m
@@ -49,21 +51,21 @@ class OdometryCalcurationNode(Node):
         self.w_curr = 0.0 # rad/s
         self.w_prev = 0.0 # rad/s
         self.yaw_rate = 0.0 # rad/s
-        self.theta_curr = 0.0 # rad
+        self.theta_curr = self.off_yaw# rad
         self.theta_prev = self.off_yaw # rad
 
-        self.x_curr_2Track = 0.0 # m
+        self.x_curr_2Track = self.off_x # m
         self.x_prev_2Track = self.off_x # m
         self.y_curr_2Track = 0.0 # m
         self.y_prev_2Track = 0.0 # m
-        self.v_curr_2Track = 0,0 # m/s
+        self.v_curr_2Track = 0.0 # m/s
         self.v_prev_2Track = 0.0 # m/s
-        self.w_curr_2Track = 0,0 # rad/s
+        self.w_curr_2Track = 0.0 # rad/s
         self.w_prev_2Track = 0.0 # rad/s
-        self.theta_curr_2Track = 0.0 # rad
+        self.theta_curr_2Track = self.off_yaw # rad
         self.theta_prev_2Track = self.off_yaw # rad
 
-        self.x_curr_1Track = 0.0 # m
+        self.x_curr_1Track = self.off_x # m
         self.x_prev_1Track = self.off_x # m
         self.y_curr_1Track = 0.0 # m
         self.y_prev_1Track = 0.0 # m
@@ -71,7 +73,7 @@ class OdometryCalcurationNode(Node):
         self.v_prev_1Track = 0.0 # m/s
         self.w_curr_1Track = 0.0 # rad/s
         self.w_prev_1Track = 0.0 # rad/s
-        self.theta_curr_1Track = 0.0 # rad
+        self.theta_curr_1Track = self.off_yaw # rad
         self.theta_prev_1Track = self.off_yaw # rad
 
         self.x_gt = 0.0
@@ -87,6 +89,7 @@ class OdometryCalcurationNode(Node):
         self.yaw_rate_publisher = self.create_publisher(Odometry, '/odometry/yaw_rate', 10)
         self.single_track_publisher = self.create_publisher(Odometry, '/odometry/single_track', 10)
         self.double_track_publisher = self.create_publisher(Odometry, '/odometry/double_track', 10)
+        self.debug = self.create_publisher(Float64MultiArray, '/debug', 10)
         
         # TF broadcaster
         # self.tf_broadcaster = tf2_ros.TransformBroadcaster(self)
@@ -115,6 +118,7 @@ class OdometryCalcurationNode(Node):
         if index_rl is not None and index_rr is not None and index_dr is not None and index_dl is not None:
             self.v_rl = msg.velocity[index_rl]*self.wheelradius
             self.v_rr = msg.velocity[index_rr]*self.wheelradius
+            self.v_avr = (self.v_rl + self.v_rr) / 2
             self.delta_L = msg.position[index_dl]
             self.delta_R = msg.position[index_dr]
         # self.v_rl = msg.velocity[0] * self.wheelradius
@@ -138,6 +142,9 @@ class OdometryCalcurationNode(Node):
         # Publish TF transformation (odom -> base_footprint)
         # self.publish_tf(self.x_curr, self.y_curr, self.quaternion)
         self.publish_tf(self.x_gt, self.y_gt, self.quat_gt)
+        msg = Float64MultiArray()
+        msg.data = [self.x_curr, self.y_curr, self.theta_curr, self.v_curr, self.w_curr]
+        self.debug.publish(msg)
 
     def OdoGroundTruth(self, msg:Odometry):
         self.header_gt = msg.header
@@ -152,61 +159,61 @@ class OdometryCalcurationNode(Node):
 
     def OdoYawRate(self):
         # Compute new pose        
-        self.x_curr = self.x_prev + (self.v_prev * self.dt * math.cos(self.theta_prev + self.BETA + ((self.w_prev * self.dt) / 2)))
-        self.y_curr = self.y_prev + (self.v_prev * self.dt * math.sin(self.theta_prev + self.BETA + ((self.w_prev * self.dt) / 2)))
-        self.theta_curr = self.theta_prev + (self.w_prev * self.dt)
+        self.x_curr = self.x_curr + (self.v_curr * self.dt * math.cos(self.theta_curr + self.BETA + ((self.w_curr * self.dt) / 2)))
+        self.y_curr = self.y_curr + (self.v_curr * self.dt * math.sin(self.theta_curr + self.BETA + ((self.w_curr * self.dt) / 2)))
+        self.theta_curr = self.theta_curr + (self.w_curr * self.dt)
         self.quaternion = tf_transformations.quaternion_from_euler(0.0, 0.0, self.theta_curr)
-        self.v_curr = (self.v_rl + self.v_rr)/2
+        self.v_curr = self.v_avr
         self.w_curr = self.yaw_rate
 
         # Publish odometry message
         self.publish_odom("odom", "base_footprint", self.x_curr, self.y_curr, self.quaternion, self.v_curr, self.w_curr, self.yaw_rate_publisher)
 
         # Update state
-        self.x_prev = self.x_curr
-        self.y_prev = self.y_curr
-        self.v_prev = self.v_curr
-        self.w_prev = self.w_curr
-        self.theta_prev = self.theta_curr
+        # self.x_prev = self.x_curr
+        # self.y_prev = self.y_curr
+        # self.v_prev = self.v_curr
+        # self.w_prev = self.w_curr
+        # self.theta_prev = self.theta_curr
 
     def Odo1Track(self):
         # delta_steer = self.delta_steering(self.delta_L, self.delta_R, self.wheelbase, self.track_width, self.steering_ratio)
         delta_steer = (self.delta_L + self.delta_R) / 2
-        self.x_curr_1Track = self.x_prev_1Track + (self.v_prev_1Track * self.dt * math.cos(self.theta_prev_1Track + self.BETA1 + ((self.w_prev_1Track * self.dt) / 2)))
-        self.y_curr_1Track = self.y_prev_1Track + (self.v_prev_1Track * self.dt * math.sin(self.theta_prev_1Track + self.BETA1 + ((self.w_prev_1Track * self.dt) / 2)))
-        self.theta_curr_1Track = self.theta_prev_1Track + (self.w_prev_1Track * self.dt)
+        self.x_curr_1Track = self.x_curr_1Track + (self.v_curr_1Track * self.dt * math.cos(self.theta_curr_1Track + self.BETA1 + ((self.w_curr_1Track * self.dt) / 2)))
+        self.y_curr_1Track = self.y_curr_1Track + (self.v_curr_1Track * self.dt * math.sin(self.theta_curr_1Track + self.BETA1 + ((self.w_curr_1Track * self.dt) / 2)))
+        self.theta_curr_1Track = self.theta_curr_1Track + (self.w_curr_1Track * self.dt)
         self.quaternion_1Track = tf_transformations.quaternion_from_euler(0.0, 0.0, self.theta_curr_1Track)
         self.BETA1 = math.atan((self.wheelbase / 2) * math.tan(delta_steer))
-        self.v_curr_1Track = (self.v_rl + self.v_rr) / 2
-        self.w_curr_1Track = (self.v_prev_1Track / self.wheelbase) * math.tan(delta_steer)
+        self.v_curr_1Track = self.v_avr
+        self.w_curr_1Track = (self.v_curr_1Track / self.wheelbase) * math.tan(delta_steer)
 
         # Publish odometry message
         self.publish_odom("odom", "base_footprint", self.x_curr_1Track, self.y_curr_1Track, self.quaternion_1Track, self.v_curr_1Track, self.w_curr_1Track, self.single_track_publisher)
 
         # Update state
-        self.x_prev_1Track = self.x_curr_1Track
-        self.y_prev_1Track = self.y_curr_1Track
-        self.v_prev_1Track = self.v_curr_1Track
-        self.w_prev_1Track = self.w_curr_1Track
-        self.theta_prev_1Track = self.theta_curr_1Track
+        # self.x_prev_1Track = self.x_curr_1Track
+        # self.y_prev_1Track = self.y_curr_1Track
+        # self.v_prev_1Track = self.v_curr_1Track
+        # self.w_prev_1Track = self.w_curr_1Track
+        # self.theta_prev_1Track = self.theta_curr_1Track
 
     def Odo2Track(self):
-        self.x_curr_2Track = self.x_prev_2Track + (self.v_prev_2Track * self.dt * math.cos(self.theta_prev_2Track + self.BETA + ((self.w_prev_2Track * self.dt) / 2)))
-        self.y_curr_2Track = self.y_prev_2Track + (self.v_prev_2Track * self.dt * math.sin(self.theta_prev_2Track + self.BETA + ((self.w_prev_2Track * self.dt) / 2)))
-        self.theta_curr_2Track = self.theta_prev_2Track + (self.w_prev_2Track * self.dt)
+        self.x_curr_2Track = self.x_curr_2Track + (self.v_curr_2Track * self.dt * math.cos(self.theta_curr_2Track + self.BETA + ((self.w_curr_2Track * self.dt) / 2)))
+        self.y_curr_2Track = self.y_curr_2Track + (self.v_curr_2Track * self.dt * math.sin(self.theta_curr_2Track + self.BETA + ((self.w_curr_2Track * self.dt) / 2)))
+        self.theta_curr_2Track = self.theta_curr_2Track + (self.w_curr_2Track * self.dt)
         self.quaternion_2Track = tf_transformations.quaternion_from_euler(0.0, 0.0, self.theta_curr_2Track)
-        self.v_curr_2Track = (self.v_rl + self.v_rr) / 2
+        self.v_curr_2Track = self.v_avr
         self.w_curr_2Track = (self.v_rr - self.v_rl) / self.track_width
 
         # Publish odometry message
         self.publish_odom("odom", "base_footprint", self.x_curr_2Track, self.y_curr_2Track, self.quaternion_2Track, self.v_curr_2Track, self.w_curr_2Track, self.double_track_publisher)
 
         # Update state
-        self.x_prev_2Track = self.x_curr_2Track
-        self.y_prev_2Track = self.y_curr_2Track
-        self.v_prev_2Track = self.v_curr_2Track
-        self.w_prev_2Track = self.w_curr_2Track
-        self.theta_prev_2Track = self.theta_curr_2Track 
+        # self.x_prev_2Track = self.x_curr_2Track
+        # self.y_prev_2Track = self.y_curr_2Track
+        # self.v_prev_2Track = self.v_curr_2Track
+        # self.w_prev_2Track = self.w_curr_2Track
+        # self.theta_prev_2Track = self.theta_curr_2Track 
 
     def publish_odom(self, frame_id, child_frame_id, pose_x, pose_y, quaternion_list, v_curr, w_curr, publisher):
         odom_msg = Odometry()

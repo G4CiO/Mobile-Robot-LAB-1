@@ -20,8 +20,9 @@ from launch import LaunchDescription
 from launch_ros.actions import Node
 import os
 import xacro    
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, ExecuteProcess, RegisterEventHandler
 from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch.event_handlers import OnProcessExit
 
 # for display robot_state_publisher and fix something
     
@@ -99,10 +100,30 @@ def generate_launch_description():
         arguments=["velocity_controllers", "--controller-manager", "/controller_manager"],
     )
 
-    position_controllers = Node(
+    position_controller = Node(
         package="controller_manager",
         executable="spawner",
         arguments=["position_controller", "--controller-manager", "/controller_manager"],
+    )
+
+    forward_position_controller = Node(
+        package="controller_manager",
+        executable="spawner",
+        arguments=["forward_position_controller", "--controller-manager", "/controller_manager"],
+    )
+    joint_state_broadcaster = ExecuteProcess(
+        cmd=["ros2", "control", "load_controller", "--set-state", "active", "joint_state_broadcaster"],
+        output="screen"
+    )
+
+    forward_position_controllers = ExecuteProcess(
+        cmd=["ros2", "control", "load_controller", "--set-state", "active", "position_controller"],
+        output="screen"
+    )
+
+    forward_velocity_controllers = ExecuteProcess(
+        cmd=["ros2", "control", "load_controller", "--set-state", "active", "velocity_controllers"],
+        output="screen"
     )
 
     joint_trajectory_controller = Node(
@@ -120,7 +141,15 @@ def generate_launch_description():
     )
 
     launch_description = LaunchDescription()
-    
+
+    # launch_description.add_action(
+    #     RegisterEventHandler(
+    #         event_handler=OnProcessExit(
+    #             target_action=spawn_entity,
+    #             on_exit=[joint_state_broadcaster, forward_velocity_controllers, forward_position_controllers],
+    #         )
+    #     )
+    # )
     launch_description.add_action(rviz)
     launch_description.add_action(dummy_robot)
     launch_description.add_action(gazebo)
@@ -128,7 +157,11 @@ def generate_launch_description():
     launch_description.add_action(joint_state_broadcaster_spawner)
     launch_description.add_action(velocity_controllers)
     # launch_description.add_action(joint_trajectory_controller)
-    launch_description.add_action(position_controllers)
+    launch_description.add_action(position_controller)
+    # launch_description.add_action(forward_position_controller)
+    # launch_description.add_action(joint_state_broadcaster)
+    # launch_description.add_action(forward_position_controllers)
+    # launch_description.add_action(forward_velocity_controllers)
     launch_description.add_action(static_tf)
 
     
