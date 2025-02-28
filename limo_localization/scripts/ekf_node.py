@@ -68,11 +68,11 @@ else:
 
 # Process noise covariance Q (15x15)
 Q = np.diag([
-    0.1, 0.1, 0.1,  # position noise
-    0.1, 0.1, 0.1,  # orientation noise (rad)
-    0.1, 0.1, 0.1,  # linear velocity noise
-    0.1, 0.1, 0.1,  # angular velocity noise (rad/s)
-    0.1, 0.1, 0.1   # linear acceleration noise
+    0.0001, 0.0001, 0.0001,  # position noise
+    0.0001, 0.0001, 0.0001,  # orientation noise (rad)
+    0.0001, 0.0001, 0.0001,  # linear velocity noise
+    0.0001, 0.0001, 0.0001,  # angular velocity noise (rad/s)
+    0.0001, 0.0001, 0.0001   # linear acceleration noise
 ]) ** 2
 
 # Measurement noise covariance for GPS (3x3): [p (3)]

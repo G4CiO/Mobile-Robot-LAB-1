@@ -255,8 +255,9 @@ Q = np.diag([
     0.0, 0.0, 0.0   # linear acceleration noise
 ]) ** 2
 ```
-<img src="image/EKF_assume_no_process_noise.png" alt="EKF Image" width="400"/>
+<img src="image/EKF_V2_assume_no_Q.png" alt="EKF Image" width="400"/>
 
+----
 ```
 Q = np.diag([
     0.01, 0.01, 0.01,  # position noise
@@ -266,29 +267,56 @@ Q = np.diag([
     0.01, 0.01, 0.01   # linear acceleration noise
 ]) ** 2
 ```
-<img src="image/EKF_ex1.png" alt="EKF Image" width="400"/>
+<img src="image/EKF_V2_ex1.png" alt="EKF Image" width="400"/>
+<img src="image/EKF_V2_ex1_too_confident.png" alt="EKF Image" width="400"/>
+
+we can see that if Q too high can lead to overconfident.
+
+----
 
 ```
 Q = np.diag([
-    0.1, 0.1, 0.1,  # position noise
-    0.1, 0.1, 0.1,  # orientation noise (rad)
-    0.1, 0.1, 0.1,  # linear velocity noise
-    0.1, 0.1, 0.1,  # angular velocity noise (rad/s)
-    0.1, 0.1, 0.1   # linear acceleration noise
+    0.001, 0.001, 0.001,  # position noise
+    0.001, 0.001, 0.001,  # orientation noise (rad)
+    0.001, 0.001, 0.001,  # linear velocity noise
+    0.001, 0.001, 0.001,  # angular velocity noise (rad/s)
+    0.001, 0.001, 0.001   # linear acceleration noise
 ]) ** 2
+
 ```
-<img src="image/EKF_ex2.png" alt="EKF Image" width="400"/>
+<img src="image/EKF_V2_ex2.png" alt="EKF Image" width="400"/>
+<img src="image/EKF_V2_ex2_too_confident.png" alt="EKF Image" width="400"/>
+
+----
 
 ```
 Q = np.diag([
-    1.0, 1.0, 1.0,  # position noise
-    1.0, 1.0, 1.0,  # orientation noise (rad)
-    1.0, 1.0, 1.0,  # linear velocity noise
-    1.0, 1.0, 1.0,  # angular velocity noise (rad/s)
-    1.0, 1.0, 1.0   # linear acceleration noise
+    0.00001, 0.00001, 0.00001,  # position noise
+    0.00001, 0.00001, 0.00001,  # orientation noise (rad)
+    0.00001, 0.00001, 0.00001,  # linear velocity noise
+    0.00001, 0.00001, 0.00001,  # angular velocity noise (rad/s)
+    0.00001, 0.00001, 0.00001   # linear acceleration noise
+]) ** 2
+
+```
+<img src="image/EKF_V2_ex3.png" alt="EKF Image" width="400"/>
+
+look like we going to low 
+
+---
+```
+Q = np.diag([
+    0.0001, 0.0001, 0.0001,  # position noise
+    0.0001, 0.0001, 0.0001,  # orientation noise (rad)
+    0.0001, 0.0001, 0.0001,  # linear velocity noise
+    0.0001, 0.0001, 0.0001,  # angular velocity noise (rad/s)
+    0.0001, 0.0001, 0.0001   # linear acceleration noise
 ]) ** 2
 ```
-<img src="image/EKF_ex3.png" alt="EKF Image" width="400"/>
+
+<img src="image/EKF_V2_ex4.png" alt="EKF Image" width="400"/>
+<img src="image/EKF_V2_ex4_too_confident.png" alt="EKF Image" width="400"/>
+
 
 It can be observed that as we increase the value of  Q , the system tends to rely more on the measurements and becomes overly confident.
 
