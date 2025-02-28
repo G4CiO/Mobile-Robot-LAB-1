@@ -1,10 +1,20 @@
 <?xml version="1.0"?>
-<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="ackbot">
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="limo_ackerman">
 
     <xacro:include filename="gazebo.xacro"/>
     <xacro:include filename="imu.xacro"/>
     <xacro:include filename="transmission.xacro"/>
 
+    <!-- Vehicle Geometries -->
+    <xacro:property name="base_x_size" value="0.2" />
+    <xacro:property name="base_y_size" value="0.13" />
+    <xacro:property name="base_z_size" value="0.1" />
+    <xacro:property name="wheelbase" value="0.2"/>
+    <xacro:property name="track" value="0.14"/>
+    <xacro:property name="base_mass" value="3.0"/>
+    <xacro:property name="wheel_vertical_offset" value="0.0" />
+    <xacro:property name="wheel_length" value="0.01" />
+    <xacro:property name="wheel_radius" value="0.045" />
 
     <!-- BASE LINK -->
 
@@ -21,13 +31,13 @@
     </joint>
 
     <link name="base_link">
-        <xacro:inertial_box mass="3" x="0.2" y="0.13" z="0.06">
+        <xacro:inertial_box mass="3" x="${base_x_size}" y="${base_y_size}" z="${base_z_size}">
             <origin xyz="0 0 0.025" rpy="0 0 0"/>
         </xacro:inertial_box>
         <visual>
             <origin xyz="0 0 0.025" rpy="0 0 0" />
             <geometry>
-                <!-- <mesh filename="file:///$(find ack_description)/meshes/Body.STL"/> -->
+                <!-- <mesh filename="file:///$(find limo_description)/meshes/limo_base.dae"/> -->
                 <box size="0.2 0.13 0.05"/>
             </geometry>
             <material name="Red">
@@ -37,7 +47,7 @@
         <collision>
             <origin xyz="0 0 0.025" rpy="0 0 0" />
             <geometry>
-                <box size="0.2 0.13 0.06"/>
+                <box size="${base_x_size} ${base_y_size} ${base_z_size}"/>
             </geometry>
         </collision>
     </link>
@@ -45,104 +55,104 @@
     <!-- WHEEL LINK -->
 
     <link name="rear_right_wheel_link">
-        <xacro:inertial_cylinder mass="0.1" length="0.01" radius="0.045">
+        <xacro:inertial_cylinder mass="0.1" length="${wheel_length}" radius="${wheel_radius}">
             <origin xyz="0 0 0" rpy="0 0 0"/>
         </xacro:inertial_cylinder>
         <visual>
             <origin xyz="0 0 0" rpy="0 0 0" />
             <geometry>
-                <!-- <mesh filename="file:///$(find ack_description)/meshes/Wheel.STL" /> -->
-                <cylinder radius="0.045" length="0.01"/>
-                <material name="Black">
-                    <color rgba="0 0 0 1"/>
+                <!-- <mesh filename="file:///$(find limo_description)/meshes/limo_wheel.dae" /> -->
+                <cylinder radius="${wheel_radius}" length="${wheel_length}1"/>
+                <material name="Red">
+                    <color rgba="1 0 0 1"/>
                 </material>
             </geometry>
         </visual>
         <collision>
             <origin xyz="0 0 0" rpy="0 0 0" />
             <geometry>
-                <!-- <mesh filename="file:///$(find ack_description)/meshes/Wheel.STL" /> -->
-                <cylinder radius="0.045" length="0.01"/>
+                <!-- <mesh filename="file:///$(find limo_description)/meshes/limo_wheel.dae" /> -->
+                <cylinder radius="${wheel_radius}" length="${wheel_length}"/>
             </geometry>
         </collision>
     </link>
 
     <link name="rear_left_wheel_link">
-        <xacro:inertial_cylinder mass="0.1" length="0.01" radius="0.045">
+        <xacro:inertial_cylinder mass="0.1" length="${wheel_length}" radius="${wheel_radius}">
             <origin xyz="0 0 0" rpy="0 0 0"/>
         </xacro:inertial_cylinder>
         <visual>
             <origin xyz="0 0 0" rpy="0 0 0" />
             <geometry>
-                <!-- <mesh filename="file:///$(find ack_description)/meshes/Wheel.STL" /> -->
-                <cylinder radius="0.045" length="0.01"/>
-                <material name="Black">
-                    <color rgba="0 0 0 1"/>
+                <!-- <mesh filename="file:///$(find limo_description)/meshes/limo_wheel.dae" /> -->
+                <cylinder radius="${wheel_radius}" length="${wheel_length}"/>
+                <material name="Red">
+                    <color rgba="1 0 0 1"/>
                 </material>
             </geometry>
         </visual>
         <collision>
             <origin xyz="0 0 0" rpy="0 0 0" />
             <geometry>
-                <!-- <mesh filename="file:///$(find ack_description)/meshes/Wheel.STL" /> -->
-                <cylinder radius="0.045" length="0.01"/>
+                <!-- <mesh filename="file:///$(find limo_description)/meshes/limo_wheel.dae" /> -->
+                <cylinder radius="${wheel_radius}" length="${wheel_length}"/>
             </geometry>
         </collision>
     </link>
 
     <link name="front_right_wheel_link">
-        <xacro:inertial_cylinder mass="0.1" length="0.01" radius="0.045">
+        <xacro:inertial_cylinder mass="0.1" length="${wheel_length}" radius="${wheel_radius}">
             <origin xyz="0 0 0" rpy="0 0 0"/>
         </xacro:inertial_cylinder>
         <visual>
             <origin xyz="0 0 0" rpy="0 0 0" />
             <geometry>
-                <!-- <mesh filename="file:///$(find ack_description)/meshes/Wheel.STL" /> -->
-                <cylinder radius="0.045" length="0.01"/>
+                <!-- <mesh filename="file:///$(find limo_description)/meshes/limo_wheel.dae" /> -->
+                <cylinder radius="${wheel_radius}" length="${wheel_length}"/>
             </geometry>
-            <material name="Black">
-                <color rgba="0 0 0 1"/>
+            <material name="Red">
+                <color rgba="1 0 0 1"/>
             </material>
         </visual>
         <collision>
             <origin xyz="0 0 0" rpy="0 0 0" />
             <geometry>
-                <!-- <mesh filename="file:///$(find ack_description)/meshes/Wheel.STL" /> -->
-                <cylinder radius="0.045" length="0.01"/>
+                <!-- <mesh filename="file:///$(find limo_description)/meshes/limo_wheel.dae" /> -->
+                <cylinder radius="${wheel_radius}" length="${wheel_length}"/>
             </geometry>
         </collision>
     </link>
 
     <link name="front_left_wheel_link">
-        <xacro:inertial_cylinder mass="0.1" length="0.01" radius="0.045">
+        <xacro:inertial_cylinder mass="0.1" length="${wheel_length}" radius="${wheel_radius}">
             <origin xyz="0 0 0" rpy="0 0 0"/>
         </xacro:inertial_cylinder>
         <visual>
             <origin xyz="0 0 0" rpy="0 0 0" />
             <geometry>
-                <!-- <mesh filename="file:///$(find ack_description)/meshes/Wheel.STL" /> -->
-                <cylinder radius="0.045" length="0.01"/>
-                <material name="Black">
-                    <color rgba="0 0 0 1"/>
+                <!-- <mesh filename="file:///$(find limo_description)/meshes/limo_wheel.dae" /> -->
+                <cylinder radius="${wheel_radius}" length="${wheel_length}"/>
+                <material name="Red">
+                    <color rgba="1 0 0 1"/>
                 </material>
             </geometry>
         </visual>   
         <collision>
             <origin xyz="0 0 0" rpy="0 0 0" />
             <geometry>
-                <!-- <mesh filename="file:///$(find ack_description)/meshes/Wheel.STL" /> -->
-                <cylinder radius="0.045" length="0.01"/>
+                <!-- <mesh filename="file:///$(find limo_description)/meshes/limo_wheel.dae" /> -->
+                <cylinder radius="${wheel_radius}" length="${wheel_length}"/>
             </geometry>
         </collision>
     </link>
 
     <link name="right_steering_hinge">
-        <xacro:inertial_flip_cylinder mass="0.1" length="0.01" radius="0.045">
+        <xacro:inertial_flip_cylinder mass="0.1" length="${wheel_length}" radius="${wheel_radius}">
             <origin xyz="0 0 0" rpy="0 0 0"/>
         </xacro:inertial_flip_cylinder>
     </link>
     <link name="left_steering_hinge">
-        <xacro:inertial_flip_cylinder mass="0.1" length="0.01" radius="0.045">
+        <xacro:inertial_flip_cylinder mass="0.1" length="${wheel_length}" radius="${wheel_radius}">
             <origin xyz="0 0 0" rpy="0 0 0"/>
         </xacro:inertial_flip_cylinder>
     </link>
@@ -150,7 +160,7 @@
     <!-- WHEEL JOINT -->
 
     <joint name="rear_left_wheel" type="continuous">
-        <origin xyz="-0.1 0.07 0" rpy="-1.57079632679 0 0" />
+        <origin xyz="${-wheelbase/2} ${track/2} 0" rpy="-1.57079632679 0 0" />
         <parent link="base_link" />
         <child link="rear_left_wheel_link" />
         <axis xyz="0 0 1" />
@@ -163,7 +173,7 @@
     </joint>
 
     <joint name="rear_right_wheel" type="continuous">
-        <origin xyz="-0.1 -0.07 0" rpy="-1.57079632679 0 0" />
+        <origin xyz="${-wheelbase/2} ${-track/2} 0" rpy="-1.57079632679 0 0" />
         <parent link="base_link" />
         <child link="rear_right_wheel_link" />
         <axis xyz="0 0 1" />
@@ -176,7 +186,7 @@
     </joint>
 
     <joint name="left_steering_hinge_wheel" type="revolute">
-        <origin xyz="0.1 0.07 0" rpy="0 0 0" />
+        <origin xyz="${wheelbase/2} ${track/2} 0" rpy="0 0 0" />
         <parent link="base_link" />
         <child link="left_steering_hinge" />
         <axis xyz="0 0 1" />
@@ -201,7 +211,7 @@
     </joint>
 
     <joint name="right_steering_hinge_wheel" type="revolute">
-        <origin xyz="0.1 -0.07 0" rpy="0 0 0" />
+        <origin xyz="${wheelbase/2} ${-track/2} 0" rpy="0 0 0" />
         <parent link="base_link" />
         <child link="right_steering_hinge" />
         <axis xyz="0 0 1" />
