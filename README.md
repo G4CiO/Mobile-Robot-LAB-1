@@ -152,14 +152,28 @@ ros2 run limo_controller controller_server.py --ros-args -p control_mode:=pure_p
 ```bash
 ros2 topic pub --once /stop_collection std_msgs/Empty "{}"
 ```
+Below is the updated Markdown for your odometry document with larger brackets for the state vector. The key change is the use of `\left[ ... \right]` for automatically resized brackets in LaTeX. These bigger brackets should render nicely in Canva or GitHub.
+
+```markdown
 ## What does "plot_odom node" do?
 
 Each odometry message contains a **12-dimensional state vector**:
 
 ```math
-X = \begin{bmatrix}
-x \\ y \\ z \\ \text{roll} \\ \text{pitch} \\ \text{yaw} \\ v_x \\ v_y \\ v_z \\ \omega_x \\ \omega_y \\ \omega_z
-\end{bmatrix}
+X = \left[\begin{array}{c}
+x \\
+ y \\
+ z \\
+ \text{roll} \\
+ \text{pitch} \\
+ \text{yaw} \\
+ v_x \\
+ v_y \\
+ v_z \\
+ \omega_x \\
+ \omega_y \\
+ \omega_z
+\end{array}\right]
 ```
 
 where:
@@ -170,6 +184,8 @@ where:
 
 The EKF requires a **covariance matrix** to model uncertainty in these state estimates.
 
+---
+
 ## 3. Sample Mean Computation
 
 Given a set of **N** state vectors $\{X_1, X_2, \dots, X_N\}$, the sample mean $\mu$ is computed as:
@@ -179,6 +195,8 @@ Given a set of **N** state vectors $\{X_1, X_2, \dots, X_N\}$, the sample mean $
 ```
 
 where $\mu$ is the **mean state vector**, representing the average of all odometry estimates.
+
+---
 
 ## 4. Covariance Matrix Computation
 
@@ -191,13 +209,15 @@ The covariance matrix $\Sigma$ quantifies the **spread and correlation** of the 
 Each element $\Sigma_{jk}$ in the **12×12 covariance matrix** represents the covariance between the $j$-th and $k$-th state variables:
 
 ```math
-\Sigma_{jk} = \frac{1}{N} \sum_{i=1}^{N} \bigl(X_{i,j} - \mu_j\bigr)\bigl(X_{i,k} - \mu_k\bigr)
+\Sigma_{jk} = \frac{1}{N} \sum_{i=1}^{N}\bigl(X_{i,j} - \mu_j\bigr)\bigl(X_{i,k} - \mu_k\bigr)
 ```
 
 where:
 - $X_{i,j}$ is the **j-th component** of the i-th state vector.
 - $\mu_j$ is the mean of the **j-th state variable**.
 - $\Sigma_{jk}$ captures how **state variable $j$ correlates with variable $k$**.
+
+---
 
 ## 5. Computation Process
 
@@ -213,6 +233,8 @@ where:
 
 4. **Compute the covariance matrix** using the error vectors.
 5. **Save covariance matrices** to a YAML file for EKF use.
+
+---
 
 ## 6. YAML Output Format
 
@@ -233,7 +255,7 @@ covariances:
     - [0.002, 0.012, ..., 0.0005]
     ...
 ```
-
+```
 
 
 
