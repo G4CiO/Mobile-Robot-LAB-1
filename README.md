@@ -140,34 +140,110 @@ First *Spawn robot* by command from LAB 1.1 then
 
 ## Sampling Data for R_matrix 
 We can determine the value of \( R \) by calculating the covariance of the difference between wheel odometry and ground truth. For the GPS node, we will set \( R \) to match the parameters configured in the GPS node.
-run sampling node 
+ 1. run sampling node for colelcting and export covariance of each wheel_odom topologies
 ```bash
 ros2 run limo_localization plot_odom.py
 ```
-then follow by controller (you can switch to other controller if you want)
+2. then follow by controller (you can switch to other controller if you want)
 ```bash
 ros2 run limo_controller controller_server.py --ros-args -p control_mode:=pure_pursuit
 ```
-for stop sampling data 
+3. for stop sampling data after the robot finished lab
 ```bash
 ros2 topic pub --once /stop_collection std_msgs/Empty "{}"
 ```
+## What does "plot_odom node" do?
 
-```
-ros2 run limo_localization ekf_confident.py 
+Each odometry message contains a **12-dimensional state vector**:
+
+```math
+X = \begin{bmatrix}
+x \\ y \\ z \\ \text{roll} \\ \text{pitch} \\ \text{yaw} \\ v_x \\ v_y \\ v_z \\ \omega_x \\ \omega_y \\ \omega_z
+\end{bmatrix}
 ```
 
-stop dianosist
-```bash
-ros2 topic pub /stop_collection std_msgs/msg/Empty "{}" --once
+where:
+- $(x, y, z)$ are position coordinates.
+- $(\text{roll}, \text{pitch}, \text{yaw})$ represent orientation (converted from quaternions).
+- $(v_x, v_y, v_z)$ are linear velocity components.
+- $(\omega_x, \omega_y, \omega_z)$ are angular velocity components.
+
+The EKF requires a **covariance matrix** to model uncertainty in these state estimates.
+
+## 1. Sample Mean Computation
+
+Given a set of **N** state vectors $\{X_1, X_2, \dots, X_N\}$, the sample mean $\mu$ is computed as:
+
+```math
+\mu = \frac{1}{N} \sum_{i=1}^{N} X_i
 ```
+
+where $\mu$ is the **mean state vector**, representing the average of all odometry estimates.
+
+## 2. Covariance Matrix Computation
+
+The covariance matrix $\Sigma$ quantifies the **spread and correlation** of the state estimates and is computed as:
+
+```math
+\Sigma = \frac{1}{N} \sum_{i=1}^{N} (X_i - \mu) (X_i - \mu)^T
+```
+
+Each element $\Sigma_{jk}$ in the **12×12 covariance matrix** represents the covariance between the $j$-th and $k$-th state variables:
+
+```math
+\Sigma_{jk} = \frac{1}{N} \sum_{i=1}^{N} \bigl(X_{i,j} - \mu_j\bigr)\bigl(X_{i,k} - \mu_k\bigr)
+```
+
+where:
+- $X_{i,j}$ is the **j-th component** of the i-th state vector.
+- $\mu_j$ is the mean of the **j-th state variable**.
+- $\Sigma_{jk}$ captures how **state variable $j$ correlates with variable $k$**.
+
+## 3. Computation Process
+
+1. **Load recorded odometry data** from the CSV file.
+2. **Extract ground truth and odometry estimates** for each state variable.
+3. **Compute error** for each state variable:
+
+   ```math
+   \text{error}_j = X_{\text{odom},j} - X_{\text{gt},j}
+   ```
+
+   where $X_{\text{odom},j}$ is the odometry estimate and $X_{\text{gt},j}$ is the ground truth.
+
+4. **Compute the covariance matrix** using the error vectors.
+5. **Save covariance matrices** to a YAML file for EKF use.
+
+## 4. YAML Output Format
+
+The computed covariance matrices are stored in a **YAML file** for integration with the EKF node. Example format:
+
+```yaml
+covariances:
+  yaw_rate:
+    - [0.01, 0.002, ..., 0.0001]
+    - [0.002, 0.015, ..., 0.0003]
+    ...
+  single_track:
+    - [0.005, 0.001, ..., 0.0002]
+    - [0.001, 0.007, ..., 0.0004]
+    ...
+  double_track:
+    - [0.003, 0.002, ..., 0.0003]
+    - [0.002, 0.012, ..., 0.0005]
+    ...
+```
+
+
+
 
 After obtaining the value of 
 𝑅, the next step is tuning the value of 
 𝑄. In this process, we will use the trial-and-error method while observing the 95% confidence interval. The goal is to prevent the EKF from becoming overconfident or diverging from the true values.
 
 ## Overconfident estimator
-![EKF Image](image/EKF_overconfident_case.png)
+
+<img src="image/EKF_overconfident_case.png" alt="EKF Image" width="400"/>
 
 ### Assume No process noise
 ```
@@ -179,7 +255,7 @@ Q = np.diag([
     0.0, 0.0, 0.0   # linear acceleration noise
 ]) ** 2
 ```
-![EKF Image](image/EKF_assume_no_process_noise.png)
+<img src="image/EKF_assume_no_process_noise.png" alt="EKF Image" width="400"/>
 
 ```
 Q = np.diag([
@@ -190,7 +266,7 @@ Q = np.diag([
     0.01, 0.01, 0.01   # linear acceleration noise
 ]) ** 2
 ```
-![EKF Image](image/EKF_ex1.png)
+<img src="image/EKF_ex1.png" alt="EKF Image" width="400"/>
 
 ```
 Q = np.diag([
@@ -201,7 +277,8 @@ Q = np.diag([
     0.1, 0.1, 0.1   # linear acceleration noise
 ]) ** 2
 ```
-![EKF Image](image/EKF_ex2.png)
+<img src="image/EKF_ex2.png" alt="EKF Image" width="400"/>
+
 ```
 Q = np.diag([
     1.0, 1.0, 1.0,  # position noise
@@ -211,6 +288,9 @@ Q = np.diag([
     1.0, 1.0, 1.0   # linear acceleration noise
 ]) ** 2
 ```
-![EKF Image](image/EKF_ex3.png)
+<img src="image/EKF_ex3.png" alt="EKF Image" width="400"/>
+
 It can be observed that as we increase the value of  Q , the system tends to rely more on the measurements and becomes overly confident.
 
+## comparision of fusion type with GPS
+![EKF Image](image/EKF_compare_all_fusion_type.png)
