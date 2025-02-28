@@ -36,13 +36,6 @@ def generate_launch_description():
         name='rviz',
         arguments=['-d', rviz_path],
         output='screen')
-    
-    # path_description = os.path.join(pkg,'urdf','my-robot.xacro')
-    # robot_desc_xml = xacro.process_file(path_description).toxml()
-    #robot_desc_xml = xacro.process_file(path_description,mappings={'robot_name': namespace}).toxml()
-    
-    # parameters = [{'robot_description':robot_desc_xml}]
-    #parameters.append({'frame_prefix':namespace+'/'})
 
     # for launch file dummy_robot.launch.py
     dummy_robot = IncludeLaunchDescription(
@@ -106,26 +99,6 @@ def generate_launch_description():
         arguments=["position_controller", "--controller-manager", "/controller_manager"],
     )
 
-    forward_position_controller = Node(
-        package="controller_manager",
-        executable="spawner",
-        arguments=["forward_position_controller", "--controller-manager", "/controller_manager"],
-    )
-    joint_state_broadcaster = ExecuteProcess(
-        cmd=["ros2", "control", "load_controller", "--set-state", "active", "joint_state_broadcaster"],
-        output="screen"
-    )
-
-    forward_position_controllers = ExecuteProcess(
-        cmd=["ros2", "control", "load_controller", "--set-state", "active", "position_controller"],
-        output="screen"
-    )
-
-    forward_velocity_controllers = ExecuteProcess(
-        cmd=["ros2", "control", "load_controller", "--set-state", "active", "velocity_controllers"],
-        output="screen"
-    )
-
     joint_trajectory_controller = Node(
         package="controller_manager",
         executable="spawner",
@@ -142,14 +115,6 @@ def generate_launch_description():
 
     launch_description = LaunchDescription()
 
-    # launch_description.add_action(
-    #     RegisterEventHandler(
-    #         event_handler=OnProcessExit(
-    #             target_action=spawn_entity,
-    #             on_exit=[joint_state_broadcaster, forward_velocity_controllers, forward_position_controllers],
-    #         )
-    #     )
-    # )
     launch_description.add_action(rviz)
     launch_description.add_action(dummy_robot)
     launch_description.add_action(gazebo)
@@ -158,10 +123,6 @@ def generate_launch_description():
     launch_description.add_action(velocity_controllers)
     # launch_description.add_action(joint_trajectory_controller)
     launch_description.add_action(position_controller)
-    # launch_description.add_action(forward_position_controller)
-    # launch_description.add_action(joint_state_broadcaster)
-    # launch_description.add_action(forward_position_controllers)
-    # launch_description.add_action(forward_velocity_controllers)
     launch_description.add_action(static_tf)
 
     
