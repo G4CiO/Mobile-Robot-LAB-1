@@ -156,50 +156,44 @@ ros2 topic pub --once /stop_collection std_msgs/Empty "{}"
 
 Each odometry message contains a **12-dimensional state vector**:
 
-```html
-<script type="text/javascript" async
-  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML">
-</script>
-```
-
 $$
 X = \begin{bmatrix} x \\ y \\ z \\ \text{roll} \\ \text{pitch} \\ \text{yaw} \\ v_x \\ v_y \\ v_z \\ \omega_x \\ \omega_y \\ \omega_z \end{bmatrix}
 $$
 
 where:
-- \( (x, y, z) \) are position coordinates.
-- \( (\text{roll}, \text{pitch}, \text{yaw}) \) represent orientation (converted from quaternions).
-- \( (v_x, v_y, v_z) \) are linear velocity components.
-- \( (\omega_x, \omega_y, \omega_z) \) are angular velocity components.
+- $ (x, y, z) $ are position coordinates.
+- $ (\text{roll}, \text{pitch}, \text{yaw}) $ represent orientation (converted from quaternions).
+- $ (v_x, v_y, v_z) $ are linear velocity components.
+- $ (\omega_x, \omega_y, \omega_z) $ are angular velocity components.
 
 The EKF requires a **covariance matrix** to model uncertainty in these state estimates.
 
 ## 3. Sample Mean Computation
-Given a set of **N** state vectors \( \{X_1, X_2, \dots, X_N\} \), the sample mean \( \mu \) is computed as:
+Given a set of **N** state vectors $ \{X_1, X_2, \dots, X_N\} $, the sample mean $ \mu $ is computed as:
 
 $$
 \mu = \frac{1}{N} \sum_{i=1}^{N} X_i
 $$
 
-where \( \mu \) is the **mean state vector**, representing the average of all odometry estimates.
+where $ \mu $ is the **mean state vector**, representing the average of all odometry estimates.
 
 ## 4. Covariance Matrix Computation
-The covariance matrix \( \Sigma \) quantifies the **spread and correlation** of the state estimates and is computed as:
+The covariance matrix $ \Sigma $ quantifies the **spread and correlation** of the state estimates and is computed as:
 
 $$
 \Sigma = \frac{1}{N} \sum_{i=1}^{N} (X_i - \mu) (X_i - \mu)^T
 $$
 
-Each element \( \Sigma_{jk} \) in the **12×12 covariance matrix** represents the covariance between the \( j \)-th and \( k \)-th state variables:
+Each element $ \Sigma_{jk} $ in the **12×12 covariance matrix** represents the covariance between the $ j $-th and $ k $-th state variables:
 
 $$
 \Sigma_{jk} = \frac{1}{N} \sum_{i=1}^{N} (X_{i,j} - \mu_j)(X_{i,k} - \mu_k)
 $$
 
 where:
-- \( X_{i,j} \) is the **j-th component** of the i-th state vector.
-- \( \mu_j \) is the mean of the **j-th state variable**.
-- \( \Sigma_{jk} \) captures how **state variable \( j \) correlates with variable \( k \)**.
+- $ X_{i,j} $ is the **j-th component** of the i-th state vector.
+- $ \mu_j $ is the mean of the **j-th state variable**.
+- $ \Sigma_{jk} $ captures how **state variable $ j $ correlates with variable $ k $**.
 
 ## 5. Computation Process
 1. **Load recorded odometry data** from the CSV file.
@@ -208,7 +202,7 @@ where:
    $$
    \text{error}_j = X_{odom,j} - X_{gt,j}
    $$
-   where \( X_{odom,j} \) is the odometry estimate and \( X_{gt,j} \) is the ground truth.
+   where $ X_{odom,j} $ is the odometry estimate and $ X_{gt,j} $ is the ground truth.
 4. **Compute the covariance matrix** using the error vectors.
 5. **Save covariance matrices** to a YAML file for EKF use.
 
