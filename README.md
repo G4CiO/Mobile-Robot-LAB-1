@@ -206,7 +206,7 @@ where:
 3. **Compute error** for each state variable:
 
    ```math
-   \text{error}_j = X_{\text{odom},j} - X_{\text{gt},j}
+   error = Xwheelodom - Xgroundtruth
    ```
 
    where $X_{\text{odom},j}$ is the odometry estimate and $X_{\text{gt},j}$ is the ground truth.
@@ -312,9 +312,24 @@ Q = np.diag([
 
 <img src="image/EKF_V2_ex4.png" alt="EKF Image" width="400"/>
 <img src="image/EKF_V2_ex4_too_confident.png" alt="EKF Image" width="400"/>
+<img src="image/EKF_V2_final_1.png" alt="EKF Image" width="400"/>
 
+now ekf is better now but there still some lag when turning we can fix this problem by increase the rotation element in Q so that will make ekf tend to rely more on measurement which could lead to better turning estimation.
 
-It can be observed that as we increase the value of  Q , the system tends to rely more on the measurements and becomes overly confident.
+---
+
+```
+Q = np.diag([
+    0.0001, 0.0001, 0.0001,  # position noise
+    0.005, 0.005, 0.005,  # orientation noise (rad)
+    0.0001, 0.0001, 0.0001,  # linear velocity noise
+    0.005, 0.005, 0.005,  # angular velocity noise (rad/s)
+    0.0001, 0.0001, 0.0001   # linear acceleration noise
+]) ** 2
+```
+<img src="image/EKF_V2_final_2.png" alt="EKF Image" width="400"/>
+
+now it a bit better now 
 
 ## comparision of fusion type with GPS
 ![EKF Image](image/EKF_V2_compare.png)
