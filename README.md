@@ -314,6 +314,36 @@ First *Spawn robot* by command from LAB 1.1 then
     ros2 service call /clear_path std_srvs/srv/Empty
     ```
 # LAB 1.3 Extended kalman filter && Tuning Q and R 
+
+## fake_gps_node
+This node simulates GPS data based on ground truth odometry input. The generated GPS data includes Gaussian noise added to the position and orientation. The node allows configuration of the noise parameters and publishes the simulated GPS data as an Odometry message.
+1. The node subscribes to the ground truth odometry topic (/odometry/ground_truth).
+2. extracts the position (x, y) and orientation (yaw) from the received odometry message.
+3. Gaussian noise is added to the extracted position and yaw using the specified noise parameters:
+    - position_noise_std: Standard deviation for positional noise (meters).
+    - orientation_noise_std: Standard deviation for orientation noise (radians).
+    ```sh
+    # Add Gaussian noise using the current parameters
+        x_noisy = x_gt + np.random.normal(0.0, self.position_noise_std)
+        y_noisy = y_gt + np.random.normal(0.0, self.position_noise_std)
+    ```
+    
+4. The modified data is published as an Odometry message on /gps/odom.
+ the parameter can be set by 
+    ```sh
+    # Parameters for noise
+            self.declare_parameter('position_noise_std', 1.0)  # meters
+            self.declare_parameter('orientation_noise_std', np.deg2rad(0.01))  # radians
+            self.position_noise_std = self.get_parameter('position_noise_std').value
+            self.orientation_noise_std = self.get_parameter('orientation_noise_std').value
+
+            # เพิ่ม parameter สำหรับ publish frequency (Hz)
+            self.declare_parameter('publish_rate', 10.0)  # Default 10 Hz
+            self.publish_rate = self.get_parameter('publish_rate').value
+    ```
+
+
+
 ## Meaning of Q and R
 1. Q (Process Noise Covariance)
 - Represents uncertainty or inaccuracies in the system model.
