@@ -33,6 +33,7 @@ install(PROGRAMS
   scripts/odometry_plotter.py
   scripts/xyz_plotter.py
   scripts/all_plotter.py
+  scripts/xyz_plotter_separate.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

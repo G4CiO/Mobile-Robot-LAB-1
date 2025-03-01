@@ -43,31 +43,37 @@
 ## Varidation
 ### Result
 ### 1. No-slip
-![all2_ackermann](./image/all2_ackermann.png)
+![good2_pure_ackermann](./image/good2_pure_ackermann.png)
 ### 2. Basic model
-![all2_bicycle](./image/all2_bicycle.png)
+![good2_pure_bicycle](./image/good2_pure_bicycle.png)
 
 ### Comparison of results from graphs
 **1.1 XY Trajectory**
 - **No-Slip**: have path that similar to Ground Truth and less slip than the *Basic model* path.
-- **Basic model**: More error-prone or slip, especially in path deviations, resulting in greater slip away from Ground Truth.
-- **Yaw Rate Model**: is the most accurate because it takes into account the Ackermann steering principle and obtains the Yaw Rate value from the gyroscope sensor (IMU) for the rotation.
-- **Single Track Model**: gives better results than Double Track Model but still has errors, especially in turning because the rotation is determined by the geometric orientation of the kinematic side-slip angles.
-- **Double Track Model**: has the greatest error compared to Ground Truth because the rotation is calculated from the velocity-difference between the two rear wheels. Since the velocity of the two rear wheels is always the same, the change in rotation should always be 0. However, from the graph, there may be some spikes which may be from wheel slip causing the velocity of the two rear wheels to be different.
+- **Basic model**: More error-prone or slip, especially effect to Yaw Rate and Double Track, resulting in greater slip away from Ground Truth especially when turn a curve.
+- **Yaw Rate Model**: is the high accurate because it takes into account the Ackermann steering principle and obtains the Yaw Rate value from the gyroscope sensor (IMU) for the rotation. But in *Basic Model* it have error a little bit because slip by wheel.
+- **Single Track Model**: gives better results in *Basic Model*  because this model determined rotation from front axle steering so when use *Basic Model* that have same left and right wheel angle, it will reduce error.
+- **Double Track Model**: has high accurate as *Yaw Rate Model* because the rotation is calculated from the velocity-difference between the two rear wheels. If mobile robot turn left, velocity of left rear wheel is less than right rear wheel opposite when turn right. so it can calcurate angular velocity from difference velocity of two rear wheel.But in *Basic Model* it have error a little bit because slip by wheel.
+
+    <img src=./image/v_turn_left.png width="300" height="200"/>
+    <img src=./image/v_turn_right.png width="300" height="200"/>
+
+    **Orange line** = velocity of rear right wheel.
+    **Brue line** = velocity of left right wheel
 
 **1.2 Yaw**
-- **No-Slip**: The yaw values ​​tend to be closer to Ground Truth, especially for *Yaw Rate Model*.
-- **Basic model**: The yaw values has a greater slip from Ground Truth, as can be seen from the increased Yaw value compared to No-Slip. It because it have more slip when rotation.
-- **Yaw Rate Model**: Most accurate and follows Ground Truth well.
-- **Single Track Model**: Better performance but still has errors compared to Ground Truth.
-- **Double Track Model**: has the most error, especially during fast rotations.
+- **No-Slip**: All odometry model have yaw values ​​tend to be closer to Ground Truth.
+- **Basic model**: All odometry model have yaw values greater slip from Ground Truth a little bit, as can be seen from the increased Yaw value compared to *No-Slip*. It because it have more slip when rotation.
+- **Yaw Rate Model**: High accurate and follows Ground Truth well.
+- **Single Track Model**: High accurate and follows Ground Truth well.
+- **Double Track Model**: High accurate and follows Ground Truth well.
 
 **1.3 Angular Velocity Z**
 - **No-Slip**: It is closer to Ground Truth, especially the *Yaw Rate Model* and have some noise in *Single Track Model*
-- **Basic model**: Same as *No-Slip* but in *Single Track Model* it has noise more than *No-Slip*.
-- **Yaw Rate Model**: Highest accuracy, it can track along Angular Velocity Z of Ground Truth because it obtains the Yaw Rate value from the gyroscope sensor (IMU)
-- **Single Track Model**:It's pretty close to Ground Truth, but it still has some errors.
-- **Double Track Model**:Has the highest error and highest swing.
+- **Basic model**: Same as *No-Slip*.
+- **Yaw Rate Model**: High accuracy, it can track along Angular Velocity Z of Ground Truth.
+- **Single Track Model**:High accuracy, it can track along Angular Velocity Z of Ground Truth.
+- **Double Track Model**: High accuracy, it can track along Angular Velocity Z of Ground Truth.
 
 ### Advantages and Disadvantages
 
@@ -90,22 +96,25 @@
 
 #### 3. Yaw Rate Model
 - **Advantages**
-    - Highest accuracy, especially in trajectory tracking and yaw from sensor IMU.
+    - High accuracy, especially in trajectory tracking and yaw from sensor IMU.
 - **Disadvantages**
     - Requaied sensor IMU.
     - Still have error from wheel odometry.
 
 #### 4. Single Track Model
 - **Advantages**
-    - Suitable for systems with Basic Model (Bicycle Model)
+    - Suitable for systems with *Basic Model* (Bicycle Model)
 - **Disadvantages**
     - Still has errors, especially in sharp turns.
+    - Still have error from wheel odometry.
 
 #### 5. Double Track  Model
 - **Advantages**
     - Suitable for systems with Differential Velocity Model that rotation from differential velocity of two rear wheel.
+    - High accuracy
 - **Disadvantages**
-    - Highest error, especially in XY trajectory for model Ackermann steering.
+    - More computationally intensive than the Single Track Model.
+    - Still have error from wheel odometry.
 
 # LAB 1.2 Path Tracking Controller
 First *Spawn robot* by command from LAB 1.1 then
@@ -122,7 +131,7 @@ First *Spawn robot* by command from LAB 1.1 then
     ```
     ros2 run limo_controller controller_server.py --ros-args -p control_mode:=stanley
     ```
-- Clear path of robot
+- Clear path of robot that visualize in rviz.
     ```bash
     ros2 service call /clear_path std_srvs/srv/Empty
     ```
