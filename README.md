@@ -124,23 +124,23 @@
     The model also uses the average rear wheel velocities as the information on the translation motion. For a vehicle without rear axle steering $\delta^x_R = 0 $, the state update equation is:
 
     $$
-    \begin{pmatrix}
+    \begin{bmatrix}
     x_k \\
     y_k \\
     \theta_k \\
     \beta_k \\
     v_k \\
     \omega_k^x
-    \end{pmatrix}
+    \end{bmatrix}
     =
-    \begin{pmatrix}
+    \begin{bmatrix}
     x_{k-1} + v_{k-1} \cdot \Delta t \cdot \cos\left(\beta_{k-1} + \theta_{k-1} + \frac{\omega_{k-1} \cdot \Delta t}{2}\right) \\
     y_{k-1} + v_{k-1} \cdot \Delta t \cdot \sin\left(\beta_{k-1} + \theta_{k-1} + \frac{\omega_{k-1} \cdot \Delta t}{2}\right) \\
     \theta_{k-1} + \omega_{k-1} \cdot \Delta t \\
     0 \\
     \frac{\tilde{v}^x_{RL,k} + \tilde{v}^x_{RR,k}}{2} \\
     \omega_k^x
-    \end{pmatrix}
+    \end{bmatrix}
     $$
 
    where:
@@ -174,23 +174,23 @@
     and for a vehicle without rear axle steering $\beta_R = 0$ in:
 
     $$
-    \begin{pmatrix}
+    \begin{bmatrix}
     x_k \\
     y_k \\
     \theta_k \\
     \beta_k \\
     v_k \\
     \omega_k^x
-    \end{pmatrix}
+    \end{bmatrix}
     =
-    \begin{pmatrix}
+    \begin{bmatrix}
     x_{k-1} + v_{k-1} \cdot \Delta t \cdot \cos\left(\beta_{k-1} + \theta_{k-1} + \frac{\omega_{k-1} \cdot \Delta t}{2}\right) \\
     y_{k-1} + v_{k-1} \cdot \Delta t \cdot \sin\left(\beta_{k-1} + \theta_{k-1} + \frac{\omega_{k-1} \cdot \Delta t}{2}\right) \\
     \theta_{k-1} + \omega_{k-1} \cdot \Delta t \\
     0 \\
     \frac{\tilde{v}^x_{RL,k} + \tilde{v}^x_{RR,k}}{2} \\
     \frac{v_{k-1}}{r_b} \tan(\beta^x_{F,k})
-    \end{pmatrix}
+    \end{bmatrix}
     $$
 
    where:
@@ -234,23 +234,23 @@
     For a vehicle without rear axle steering $\delta^x_R = 0 ⇒ \delta_{RL},\delta_{RR} = 0$ the simplest form can be build: the *Kinematic-Double-Track Model* (Odo2Track) sometimes also called *Differential-Velocity Model*:
 
     $$
-    \begin{pmatrix}
+    \begin{bmatrix}
     x_k \\
     y_k \\
     \theta_k \\
     \beta_k \\
     v_k \\
     \omega_k^x
-    \end{pmatrix}
+    \end{bmatrix}
     =
-    \begin{pmatrix}
+    \begin{bmatrix}
     x_{k-1} + v_{k-1} \cdot \Delta t \cdot \cos\left(\beta_{k-1} + \theta_{k-1} + \frac{\omega_{k-1} \cdot \Delta t}{2}\right) \\
     y_{k-1} + v_{k-1} \cdot \Delta t \cdot \sin\left(\beta_{k-1} + \theta_{k-1} + \frac{\omega_{k-1} \cdot \Delta t}{2}\right) \\
     \theta_{k-1} + \omega_{k-1} \cdot \Delta t \\
     0 \\
     \frac{\tilde{v}^x_{RL,k} + \tilde{v}^x_{RR,k}}{2} \\
     \frac{\tilde{v}^x_{RR,k} - \tilde{v}^x_{RL,k}}{r_{RR,y} - r_{RL,y}}
-    \end{pmatrix}
+    \end{bmatrix}
     $$
 
    where:
