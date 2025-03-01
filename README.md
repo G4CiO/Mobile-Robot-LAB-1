@@ -87,19 +87,13 @@
     #### 1.2 No Slip condition constraints
     The Ackermann steering angle is given by:
 
-    ```math
-    \delta_{Ack} = \frac{\delta_{in}}{\gamma}
-    ```
+    $\delta_{Ack} = \frac{\delta_{in}}{\gamma}$
 
     The left and right wheel steering angles are calculated as:
 
-    $
-    \delta_L = \tan^{-1} \left( \frac{WB \tan(\delta_{Ack})}{WB + 0.5 TW \tan(\delta_{Ack})} \right)
-    $
+    $\delta_L = \tan^{-1} \left( \frac{WB \tan(\delta_{Ack})}{WB + 0.5 TW \tan(\delta_{Ack})} \right)$
 
-    $
-    \delta_R = \tan^{-1} \left( \frac{WB \tan(\delta_{Ack})}{WB - 0.5 TW \tan(\delta_{Ack})} \right)
-    $
+    $\delta_R = \tan^{-1} \left( \frac{WB \tan(\delta_{Ack})}{WB - 0.5 TW \tan(\delta_{Ack})} \right)$
 
     where:
     - $\delta_{Ack}$ is the Ackermann steering angle,
