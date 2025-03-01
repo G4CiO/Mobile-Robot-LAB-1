@@ -72,6 +72,10 @@
     Find steer angle $\delta$ from
 
     ```math
+    \Sigma_{jk} = \frac{1}{N} \sum_{i=1}^{N} \bigl(X_{i,j} - \mu_j\bigr)\bigl(X_{i,k} - \mu_k\bigr)
+    ```
+
+    ```math
     \delta = \arctan \left( \frac{L \Omega_z}{v} \right)
     ```
 
