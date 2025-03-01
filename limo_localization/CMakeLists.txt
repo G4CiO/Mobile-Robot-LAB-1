@@ -33,6 +33,7 @@ install(PROGRAMS
   scripts/fake_gps_node.py
   scripts/ekf_diagnostics.py
   scripts/ekf_confident.py
+  scripts/moai.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

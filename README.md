@@ -526,3 +526,6 @@ Now let's try running it without ground truth but EKF odometry instead
 ```
 ros2 run limo_controller controller_server.py --ros-args -p control_mode:=pure_pursuit -p odom_source:=ekf_odom
 ```
+
+![EKF Image](image/EKF_V2_final_validate_2.png)
+
