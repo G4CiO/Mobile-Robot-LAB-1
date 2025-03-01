@@ -71,13 +71,9 @@
     #### 1.1 Basic Model
     Find steer angle $\delta$ from
 
-    ```math
-    \Sigma_{jk} = \frac{1}{N} \sum_{i=1}^{N} \bigl(X_{i,j} - \mu_j\bigr)\bigl(X_{i,k} - \mu_k\bigr)
-    ```
 
-    ```math
-    \delta = \arctan \left( \frac{L \Omega_z}{v} \right)
-    ```
+    
+    $\delta = \arctan \left( \frac{L \Omega_z}{v} \right)$
 
     where:
     - $L$ is the wheelbase of the vehicle,
@@ -97,12 +93,13 @@
 
     The left and right wheel steering angles are calculated as:
 
-    ```math
+    $
     \delta_L = \tan^{-1} \left( \frac{WB \tan(\delta_{Ack})}{WB + 0.5 TW \tan(\delta_{Ack})} \right)
-    ```
-    ```math
+    $
+
+    $
     \delta_R = \tan^{-1} \left( \frac{WB \tan(\delta_{Ack})}{WB - 0.5 TW \tan(\delta_{Ack})} \right)
-    ```
+    $
 
     where:
     - $\delta_{Ack}$ is the Ackermann steering angle,
@@ -126,7 +123,7 @@
     
     The model also uses the average rear wheel velocities as the information on the translation motion. For a vehicle without rear axle steering $\delta^x_R = 0 $, the state update equation is:
 
-    ```math
+    $$
     \begin{pmatrix}
     x_k \\
     y_k \\
@@ -144,7 +141,7 @@
     \frac{\tilde{v}^x_{RL,k} + \tilde{v}^x_{RR,k}}{2} \\
     \omega_k^x
     \end{pmatrix}
-    ```
+    $$
 
    where:
     - $x_{k}, y_{k}$ is Position coordinates of vehicle,
