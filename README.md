@@ -71,9 +71,9 @@
     #### 1.1 Basic Model
     Find steer angle $\delta$ from
 
-    $$
+    ```math
     \delta = \arctan \left( \frac{L \Omega_z}{v} \right)
-    $$
+    ```
 
     where:
     - $L$ is the wheelbase of the vehicle,
@@ -87,19 +87,18 @@
     #### 1.2 No Slip condition constraints
     The Ackermann steering angle is given by:
 
-    $$
+    ```math
     \delta_{Ack} = \frac{\delta_{in}}{\gamma}
-    $$
+    ```
 
     The left and right wheel steering angles are calculated as:
 
-    $$
+    ```math
     \delta_L = \tan^{-1} \left( \frac{WB \tan(\delta_{Ack})}{WB + 0.5 TW \tan(\delta_{Ack})} \right)
-    $$
-
-    $$
+    ```
+    ```math
     \delta_R = \tan^{-1} \left( \frac{WB \tan(\delta_{Ack})}{WB - 0.5 TW \tan(\delta_{Ack})} \right)
-    $$
+    ```
 
     where:
     - $\delta_{Ack}$ is the Ackermann steering angle,
@@ -123,25 +122,25 @@
     
     The model also uses the average rear wheel velocities as the information on the translation motion. For a vehicle without rear axle steering $\delta^x_R = 0 $, the state update equation is:
 
-    $$
-    \begin{bmatrix}
+    ```math
+    \begin{pmatrix}
     x_k \\
     y_k \\
     \theta_k \\
     \beta_k \\
     v_k \\
     \omega_k^x
-    \end{bmatrix}
+    \end{pmatrix}
     =
-    \begin{bmatrix}
+    \begin{pmatrix}
     x_{k-1} + v_{k-1} \cdot \Delta t \cdot \cos\left(\beta_{k-1} + \theta_{k-1} + \frac{\omega_{k-1} \cdot \Delta t}{2}\right) \\
     y_{k-1} + v_{k-1} \cdot \Delta t \cdot \sin\left(\beta_{k-1} + \theta_{k-1} + \frac{\omega_{k-1} \cdot \Delta t}{2}\right) \\
     \theta_{k-1} + \omega_{k-1} \cdot \Delta t \\
     0 \\
     \frac{\tilde{v}^x_{RL,k} + \tilde{v}^x_{RR,k}}{2} \\
     \omega_k^x
-    \end{bmatrix}
-    $$
+    \end{pmatrix}
+    ```
 
    where:
     - $x_{k}, y_{k}$ is Position coordinates of vehicle,
@@ -173,25 +172,25 @@
 
     and for a vehicle without rear axle steering $\beta_R = 0$ in:
 
-    $$
-    \begin{bmatrix}
+    ```math
+    \begin{pmatrix}
     x_k \\
     y_k \\
     \theta_k \\
     \beta_k \\
     v_k \\
     \omega_k^x
-    \end{bmatrix}
+    \end{pmatrix}
     =
-    \begin{bmatrix}
+    \begin{pmatrix}
     x_{k-1} + v_{k-1} \cdot \Delta t \cdot \cos\left(\beta_{k-1} + \theta_{k-1} + \frac{\omega_{k-1} \cdot \Delta t}{2}\right) \\
     y_{k-1} + v_{k-1} \cdot \Delta t \cdot \sin\left(\beta_{k-1} + \theta_{k-1} + \frac{\omega_{k-1} \cdot \Delta t}{2}\right) \\
     \theta_{k-1} + \omega_{k-1} \cdot \Delta t \\
     0 \\
     \frac{\tilde{v}^x_{RL,k} + \tilde{v}^x_{RR,k}}{2} \\
     \frac{v_{k-1}}{r_b} \tan(\beta^x_{F,k})
-    \end{bmatrix}
-    $$
+    \end{pmatrix}
+    ```
 
    where:
     - $x_{k}, y_{k}$ is Position coordinates of vehicle,
@@ -233,25 +232,25 @@
 
     For a vehicle without rear axle steering $\delta^x_R = 0 ⇒ \delta_{RL},\delta_{RR} = 0$ the simplest form can be build: the *Kinematic-Double-Track Model* (Odo2Track) sometimes also called *Differential-Velocity Model*:
 
-    $$
-    \begin{bmatrix}
+    ```math
+    \begin{pmatrix}
     x_k \\
     y_k \\
     \theta_k \\
     \beta_k \\
     v_k \\
     \omega_k^x
-    \end{bmatrix}
+    \end{pmatrix}
     =
-    \begin{bmatrix}
+    \begin{pmatrix}
     x_{k-1} + v_{k-1} \cdot \Delta t \cdot \cos\left(\beta_{k-1} + \theta_{k-1} + \frac{\omega_{k-1} \cdot \Delta t}{2}\right) \\
     y_{k-1} + v_{k-1} \cdot \Delta t \cdot \sin\left(\beta_{k-1} + \theta_{k-1} + \frac{\omega_{k-1} \cdot \Delta t}{2}\right) \\
     \theta_{k-1} + \omega_{k-1} \cdot \Delta t \\
     0 \\
     \frac{\tilde{v}^x_{RL,k} + \tilde{v}^x_{RR,k}}{2} \\
     \frac{\tilde{v}^x_{RR,k} - \tilde{v}^x_{RL,k}}{r_{RR,y} - r_{RL,y}}
-    \end{bmatrix}
-    $$
+    \end{pmatrix}
+    ```
 
    where:
     - $x_{k}, y_{k}$ is Position coordinates of vehicle,
