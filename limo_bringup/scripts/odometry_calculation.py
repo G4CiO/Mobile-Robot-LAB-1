@@ -34,9 +34,7 @@ class OdometryCalcurationNode(Node):
         self.v_avr = 0.0
         self.delta_L = 0.0
         self.delta_R = 0.0
-        self.v = 0.0
         self.BETA = 0.0  # Assuming no lateral slip
-        self.BETA1 = 0.0
         # Offset odometry
         self.off_x = 9.073496746393584
         self.off_yaw = 1.5700039414375448

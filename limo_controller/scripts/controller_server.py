@@ -37,7 +37,6 @@ class ControllerServer(Node):
         self.declare_parameter('file', 'path.yaml')
         self.declare_parameter('control_mode', 'pure_pursuit')  # Default mode: 'pure_pursuit'
         self.declare_parameter('path_file', 'path.yaml')
-        self.declare_parameter('prediction_horizon', 10)
         self.declare_parameter('wheelbase', 0.2) 
 
         # Initialization

@@ -54,8 +54,6 @@ install(TARGETS
 install(DIRECTORY
   # add directories here
   config
-  CubicSpline
-  utils
   DESTINATION share/${PROJECT_NAME})
 
 ament_package()
