@@ -318,3 +318,9 @@ It can be observed that as we increase the value of  Q , the system tends to rel
 
 ## comparision of fusion type with GPS
 ![EKF Image](image/EKF_V2_compare.png)
+
+Now let's try running it without ground truth but EKF odometry instead
+
+```
+ros2 run limo_controller controller_server.py --ros-args -p control_mode:=pure_pursuit -p odom_source:=ekf_odom
+```

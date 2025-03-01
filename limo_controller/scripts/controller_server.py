@@ -38,6 +38,21 @@ class ControllerServer(Node):
         self.declare_parameter('control_mode', 'pure_pursuit')  # Default mode: 'pure_pursuit'
         self.declare_parameter('path_file', 'path.yaml')
         self.declare_parameter('wheelbase', 0.2) 
+        
+        # Declare the odometry source parameter, default to "ground_truth" 
+        self.declare_parameter('odom_source', 'ground_truth')
+        
+        # Get the parameter value
+        odom_source = self.get_parameter('odom_source').value
+
+        # Create a subscription based on the chosen odometry source
+        if odom_source == 'ground_truth':
+            self.odom_sub = self.create_subscription(Odometry, '/odometry/ground_truth', self.odom_callback, 10)
+        elif odom_source == 'ekf_odom':
+            self.odom_sub = self.create_subscription(Odometry, '/ekf_odom', self.odom_callback, 10)
+        else:
+            self.get_logger().warn(f"Unknown odom_source '{odom_source}', defaulting to /odometry/ground_truth")
+            self.odom_sub = self.create_subscription(Odometry, '/odometry/ground_truth', self.odom_callback, 10)
 
         # Initialization
         self.robot_x = 0.0
@@ -70,14 +85,7 @@ class ControllerServer(Node):
         # Load path from YAML file
         self.path = self.load_path()
         self.current_target_idx = 0
-        
-        # Subscribers and Publishers
-        self.odom_sub = self.create_subscription(Odometry, '/odometry/ground_truth', self.odom_callback, 10)
-        
-        #  EKF odometry
-        # self.ekf_odom_sub = self.create_subscription(Odometry, '/ekf_odom', self.odom_callback, 10)
-    
-        
+         
         self.cmd_vel_pub = self.create_publisher(Twist, '/cmd_vel', 10)
         
         # Timer for control loop
