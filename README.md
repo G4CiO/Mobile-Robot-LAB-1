@@ -117,25 +117,7 @@
     
     The model also uses the average rear wheel velocities as the information on the translation motion. For a vehicle without rear axle steering $\delta^x_R = 0 $, the state update equation is:
 
-    $$
-    \begin{pmatrix}
-    x_k \\
-    y_k \\
-    \theta_k \\
-    \beta_k \\
-    v_k \\
-    \omega_k^x
-    \end{pmatrix}
-    =
-    \begin{pmatrix}
-    x_{k-1} + v_{k-1} \cdot \Delta t \cdot \cos\left(\beta_{k-1} + \theta_{k-1} + \frac{\omega_{k-1} \cdot \Delta t}{2}\right) \\
-    y_{k-1} + v_{k-1} \cdot \Delta t \cdot \sin\left(\beta_{k-1} + \theta_{k-1} + \frac{\omega_{k-1} \cdot \Delta t}{2}\right) \\
-    \theta_{k-1} + \omega_{k-1} \cdot \Delta t \\
-    0 \\
-    \frac{\tilde{v}^x_{RL,k} + \tilde{v}^x_{RR,k}}{2} \\
-    \omega_k^x
-    \end{pmatrix}
-    $$
+    ![Yaw rate](./image/1.png)
 
    where:
     - $x_{k}, y_{k}$ is Position coordinates of vehicle,
@@ -167,25 +149,7 @@
 
     and for a vehicle without rear axle steering $\beta_R = 0$ in:
 
-    ```math
-    \begin{pmatrix}
-    x_k \\
-    y_k \\
-    \theta_k \\
-    \beta_k \\
-    v_k \\
-    \omega_k^x
-    \end{pmatrix}
-    =
-    \begin{pmatrix}
-    x_{k-1} + v_{k-1} \cdot \Delta t \cdot \cos\left(\beta_{k-1} + \theta_{k-1} + \frac{\omega_{k-1} \cdot \Delta t}{2}\right) \\
-    y_{k-1} + v_{k-1} \cdot \Delta t \cdot \sin\left(\beta_{k-1} + \theta_{k-1} + \frac{\omega_{k-1} \cdot \Delta t}{2}\right) \\
-    \theta_{k-1} + \omega_{k-1} \cdot \Delta t \\
-    0 \\
-    \frac{\tilde{v}^x_{RL,k} + \tilde{v}^x_{RR,k}}{2} \\
-    \frac{v_{k-1}}{r_b} \tan(\beta^x_{F,k})
-    \end{pmatrix}
-    ```
+    ![Single-track model](./image/2.png)
 
    where:
     - $x_{k}, y_{k}$ is Position coordinates of vehicle,
@@ -227,25 +191,7 @@
 
     For a vehicle without rear axle steering $\delta^x_R = 0 ⇒ \delta_{RL},\delta_{RR} = 0$ the simplest form can be build: the *Kinematic-Double-Track Model* (Odo2Track) sometimes also called *Differential-Velocity Model*:
 
-    ```math
-    \begin{pmatrix}
-    x_k \\
-    y_k \\
-    \theta_k \\
-    \beta_k \\
-    v_k \\
-    \omega_k^x
-    \end{pmatrix}
-    =
-    \begin{pmatrix}
-    x_{k-1} + v_{k-1} \cdot \Delta t \cdot \cos\left(\beta_{k-1} + \theta_{k-1} + \frac{\omega_{k-1} \cdot \Delta t}{2}\right) \\
-    y_{k-1} + v_{k-1} \cdot \Delta t \cdot \sin\left(\beta_{k-1} + \theta_{k-1} + \frac{\omega_{k-1} \cdot \Delta t}{2}\right) \\
-    \theta_{k-1} + \omega_{k-1} \cdot \Delta t \\
-    0 \\
-    \frac{\tilde{v}^x_{RL,k} + \tilde{v}^x_{RR,k}}{2} \\
-    \frac{\tilde{v}^x_{RR,k} - \tilde{v}^x_{RL,k}}{r_{RR,y} - r_{RL,y}}
-    \end{pmatrix}
-    ```
+    ![Double-track model](./image/3.png)
 
    where:
     - $x_{k}, y_{k}$ is Position coordinates of vehicle,
