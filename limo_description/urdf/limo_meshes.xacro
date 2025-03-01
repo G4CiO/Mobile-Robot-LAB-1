@@ -35,14 +35,10 @@
             <origin xyz="0 0 0.025" rpy="0 0 0"/>
         </xacro:inertial_box>
         <visual>
-            <origin xyz="0 0 0.025" rpy="0 0 0" />
+            <origin xyz="0 0 ${-wheel_radius}" rpy="0 0 ${pi/2}" />
             <geometry>
-                <!-- <mesh filename="file:///$(find limo_description)/meshes/limo_base.dae"/> -->
-                <box size="0.2 0.13 0.05"/>
+                <mesh filename="file:///$(find limo_description)/meshes/limo_base.dae"/>
             </geometry>
-            <material name="Red">
-                <color rgba="1 0 0 1"/>
-            </material>
         </visual>
         <collision>
             <origin xyz="0 0 0.025" rpy="0 0 0" />
@@ -59,13 +55,9 @@
             <origin xyz="0 0 0" rpy="0 0 0"/>
         </xacro:inertial_cylinder>
         <visual>
-            <origin xyz="0 0 0" rpy="0 0 0" />
+            <origin xyz="0 0 0" rpy="${-pi/2} 0 0" />
             <geometry>
-                <!-- <mesh filename="file:///$(find limo_description)/meshes/limo_wheel.dae" /> -->
-                <cylinder radius="${wheel_radius}" length="${wheel_length}1"/>
-                <material name="Red">
-                    <color rgba="1 0 0 1"/>
-                </material>
+                <mesh filename="file:///$(find limo_description)/meshes/limo_wheel.dae" />
             </geometry>
         </visual>
         <collision>
@@ -82,13 +74,9 @@
             <origin xyz="0 0 0" rpy="0 0 0"/>
         </xacro:inertial_cylinder>
         <visual>
-            <origin xyz="0 0 0" rpy="0 0 0" />
+            <origin xyz="0 0 0" rpy="${pi/2} 0 0" />
             <geometry>
-                <!-- <mesh filename="file:///$(find limo_description)/meshes/limo_wheel.dae" /> -->
-                <cylinder radius="${wheel_radius}" length="${wheel_length}"/>
-                <material name="Red">
-                    <color rgba="1 0 0 1"/>
-                </material>
+                <mesh filename="file:///$(find limo_description)/meshes/limo_wheel.dae" />
             </geometry>
         </visual>
         <collision>
@@ -105,14 +93,10 @@
             <origin xyz="0 0 0" rpy="0 0 0"/>
         </xacro:inertial_cylinder>
         <visual>
-            <origin xyz="0 0 0" rpy="0 0 0" />
+            <origin xyz="0 0 0" rpy="${-pi/2} 0 0" />
             <geometry>
-                <!-- <mesh filename="file:///$(find limo_description)/meshes/limo_wheel.dae" /> -->
-                <cylinder radius="${wheel_radius}" length="${wheel_length}"/>
+                <mesh filename="file:///$(find limo_description)/meshes/limo_wheel.dae" />
             </geometry>
-            <material name="Red">
-                <color rgba="1 0 0 1"/>
-            </material>
         </visual>
         <collision>
             <origin xyz="0 0 0" rpy="0 0 0" />
@@ -128,13 +112,9 @@
             <origin xyz="0 0 0" rpy="0 0 0"/>
         </xacro:inertial_cylinder>
         <visual>
-            <origin xyz="0 0 0" rpy="0 0 0" />
+            <origin xyz="0 0 0" rpy="${pi/2} 0 0" />
             <geometry>
-                <!-- <mesh filename="file:///$(find limo_description)/meshes/limo_wheel.dae" /> -->
-                <cylinder radius="${wheel_radius}" length="${wheel_length}"/>
-                <material name="Red">
-                    <color rgba="1 0 0 1"/>
-                </material>
+                <mesh filename="file:///$(find limo_description)/meshes/limo_wheel.dae" />
             </geometry>
         </visual>   
         <collision>

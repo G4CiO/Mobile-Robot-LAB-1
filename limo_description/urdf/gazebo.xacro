@@ -90,14 +90,14 @@
     </gazebo>
 
     <gazebo reference="base_link">
-        <material>Gazebo/Red</material>
+        <material>Gazebo/White</material>
         <minDepth>0.001</minDepth>
         <kp  value="10000000.0"/>
         <kd value="0.2"/>
     </gazebo>
 
     <gazebo reference="front_left_wheel_link">
-        <material>Gazebo/White</material>
+        <material>Gazebo/Black</material>
         <mu1>10.0</mu1>
         <mu2>10.0</mu2>
         <!-- <minDepth>0.001</minDepth> -->
@@ -106,7 +106,7 @@
     </gazebo>
 
     <gazebo reference="front_right_wheel_link">
-        <material>Gazebo/White</material>
+        <material>Gazebo/Black</material>
         <mu1>10.0</mu1>
         <mu2>10.0</mu2>
         <!-- <minDepth>0.001</minDepth> -->
@@ -115,7 +115,7 @@
     </gazebo>
 
     <gazebo reference="rear_left_wheel_link">
-        <material>Gazebo/White</material>
+        <material>Gazebo/Black</material>
         <mu1>10.0</mu1>
         <mu2>10.0</mu2>
         <!-- <minDepth>0.001</minDepth> -->
@@ -124,7 +124,7 @@
     </gazebo>
 
     <gazebo reference="rear_right_wheel_link">
-        <material>Gazebo/White</material>
+        <material>Gazebo/Black</material>
         <mu1>10.0</mu1>
         <mu2>10.0</mu2>
         <!-- <minDepth>0.001</minDepth> -->
@@ -133,7 +133,7 @@
     </gazebo>
 
     <gazebo reference="left_steering_hinge">
-        <material>Gazebo/White</material>
+        <material>Gazebo/Black</material>
         <mu1>0.1</mu1>
         <mu2>0.1</mu2>
         <!-- <minDepth>0.001</minDepth> -->
@@ -142,7 +142,7 @@
     </gazebo>
 
     <gazebo reference="right_steering_hinge">
-        <material>Gazebo/White</material>
+        <material>Gazebo/Black</material>
         <mu1>0.1</mu1>
         <mu2>0.1</mu2>
         <!-- <minDepth>0.001</minDepth> -->
