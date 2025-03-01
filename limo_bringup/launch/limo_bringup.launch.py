@@ -29,7 +29,6 @@ from launch.substitutions import LaunchConfiguration
 def generate_launch_description():
     
     pkg_limo_gazebo = get_package_share_directory('limo_gazebo')
-    pkg_limo_bringup = get_package_share_directory('limo_bringup')
 
     # Declare launch argument for steering mode
     steering_mode_arg = DeclareLaunchArgument(
@@ -59,14 +58,14 @@ def generate_launch_description():
 
     # Steering model node with configurable steering mode
     steering_model_node = Node(
-        package="limo_bringup",
+        package="limo_controller",
         executable="steering_model_node.py",
         name="steering_model_node",
         parameters=[{"steering_mode": LaunchConfiguration("steering_mode")}]
     )
 
     odometry_calculation = Node(
-        package="limo_bringup",
+        package="limo_controller",
         executable="odometry_calculation.py",
         name="odometry_calculation"
     )

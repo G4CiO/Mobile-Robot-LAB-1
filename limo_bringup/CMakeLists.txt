@@ -28,8 +28,6 @@ ament_python_install_package(${PROJECT_NAME})
 # Install Python executables
 install(PROGRAMS
   scripts/dummy_script.py
-  scripts/steering_model_node.py
-  scripts/odometry_calculation.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

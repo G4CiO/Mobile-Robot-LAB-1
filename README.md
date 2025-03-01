@@ -26,6 +26,7 @@
 
 # LAB 1.1 Kinematics of Mobile Robot
 ## Implementation
+### How to use Lab.
 1. Spawn robot in gazebo and publish three model of odometry.
 
 - Set to **Ackermann** Mode (Default):
@@ -40,6 +41,243 @@
     ```
     ros2 run teleop_twist_keyboard teleop_twist_keyboard
     ```
+### Model Ackermann Steering
+1. Create package [limo_description](limo_description/) for write URDF of robot.
+2. Create URDF of robot.
+    #### Robot model
+    ![limo_model](./image/limo_model.png)
+
+    I have two model. First, [limo_meshes.xacro](limo_description/urdf/limo_meshes.xacro) for include model of limo mobile robot. Second, [limo_no_meshes.xacro](limo_description/urdf/limo_no_meshes.xacro) for use normal geometry model. I create two ver. because when use model in URDF it make my computer lack. You can change model in launch file [limo.launch.py](limo_description/launch/limo.launch.py)
+
+    #### Robot TF
+    ![limo_TF](./image/limo_TF.png)
+
+    **Tree of TF**
+    - base_footprint
+        - base_link
+            - imu_link
+            - rear_left_wheel_link
+            - rear_right_wheel_link
+            - left_steering_hinge
+                - front_left_wheel_link
+            - right_steering_hinge
+                - front_right_wheel_link
+3. Import robot to Gazebo.
+
+    I create package [limo_gazebo](limo_gazebo/) for load world in gazebo ([load_world_into_gazebo.launch.py](limo_gazebo/launch/load_world_into_gazebo.launch.py)), spawn robot in gazebo, and spawn controller for control robot ([sim.launch.py](limo_gazebo/launch/sim.launch.py)).
+
+### Inverse Kinematics
+1. Create node [steering_model_node.py](limo_controller/scripts/steering_model_node.py) for compute Inverse Kinematics that get **cmd_vel** and turn to **wheel speed** of robot.
+    #### 1.1 Basic Model
+    Find steer angle $\delta$ from
+
+    $$
+    \delta = \arctan \left( \frac{L \Omega_z}{v} \right)
+    $$
+
+    where:
+    - $L$ is the wheelbase of the vehicle,
+    - $\Omega_z$ is the angular velocity at z axis of the vehicle,
+    - $v$ is the velocity of the vehicle.
+
+    Can implement in code:
+    ```python
+    self.delta_steer = math.atan(wheelbase * self.omega / self.v) if self.v != 0 else 0
+    ```
+    #### 1.2 No Slip condition constraints
+    The Ackermann steering angle is given by:
+
+    $$
+    \delta_{Ack} = \frac{\delta_{in}}{\gamma}
+    $$
+
+    The left and right wheel steering angles are calculated as:
+
+    $$
+    \delta_L = \tan^{-1} \left( \frac{WB \tan(\delta_{Ack})}{WB + 0.5 TW \tan(\delta_{Ack})} \right)
+    $$
+
+    $$
+    \delta_R = \tan^{-1} \left( \frac{WB \tan(\delta_{Ack})}{WB - 0.5 TW \tan(\delta_{Ack})} \right)
+    $$
+
+    where:
+    - $\delta_{Ack}$ is the Ackermann steering angle,
+    - $\delta_{in}$ is the steering angle,
+    - $\gamma$ is the steering ratio,
+    - $WB$ is the wheelbase,
+    - $TW$ is the track width.
+
+    Can implement in code:
+    ```python
+    self.delta_steer = math.atan(wheelbase * self.omega / self.v) if self.v != 0 else 0
+    delta_ack = self.delta_steer / steering_ratio
+
+    delta_L = math.atan((wheelbase * math.tan(delta_ack)) / (wheelbase - 0.5 * track_width * math.tan(delta_ack)))
+    delta_R = math.atan((wheelbase * math.tan(delta_ack)) / (wheelbase + 0.5 * track_width * math.tan(delta_ack)))
+    ```
+### Forward Kinematics
+1. Create node [odometry_calculation.py](limo_controller/scripts/odometry_calculation.py) for compute Forward Kinematics from **wheel speed** to **odometry** by use 3 model.
+    #### 1.1 Yaw rate
+    The *Yaw-Rate-Odometry Model* (OdoYawRate) uses the yaw rate $\omega^x$ directly measured by the gyroscope sensor as the infor- mation for the rotation. 
+    
+    The model also uses the average rear wheel velocities as the information on the translation motion. For a vehicle without rear axle steering $\delta^x_R = 0 $, the state update equation is:
+
+    $$
+    \begin{pmatrix}
+    x_k \\
+    y_k \\
+    \theta_k \\
+    \beta_k \\
+    v_k \\
+    \omega_k^x
+    \end{pmatrix}
+    =
+    \begin{pmatrix}
+    x_{k-1} + v_{k-1} \cdot \Delta t \cdot \cos\left(\beta_{k-1} + \theta_{k-1} + \frac{\omega_{k-1} \cdot \Delta t}{2}\right) \\
+    y_{k-1} + v_{k-1} \cdot \Delta t \cdot \sin\left(\beta_{k-1} + \theta_{k-1} + \frac{\omega_{k-1} \cdot \Delta t}{2}\right) \\
+    \theta_{k-1} + \omega_{k-1} \cdot \Delta t \\
+    0 \\
+    \frac{\tilde{v}^x_{RL,k} + \tilde{v}^x_{RR,k}}{2} \\
+    \omega_k^x
+    \end{pmatrix}
+    $$
+
+   where:
+    - $x_{k}, y_{k}$ is Position coordinates of vehicle,
+    - $\theta_k$ is Angular Position in z axis of vehicle, 
+    - $\beta_k$ is Slip angle of vehicle, 
+    - $v_{k}$ is Linear Velocity of vehicle,
+    - $\omega_k$ is Angular velocity of vehicle,
+    - $\omega_k^x$ is yaw rate that directly measured by the gyroscope sensor, 
+    - $\Delta t$ is Time step, 
+    - $\tilde{v}^x_{RL,k}, \tilde{v}^x_{RR,k}$ is Rear Left/Right wheel velocities.
+
+    Can implement in code:
+    ```python
+    def OdoYawRate(self):
+    # Compute new pose        
+    self.x_curr = self.x_curr + (self.v_curr * self.dt * math.cos(self.theta_curr + self.BETA + ((self.w_curr * self.dt) / 2)))
+    self.y_curr = self.y_curr + (self.v_curr * self.dt * math.sin(self.theta_curr + self.BETA + ((self.w_curr * self.dt) / 2)))
+    self.theta_curr = self.theta_curr + (self.w_curr * self.dt)
+    self.quaternion = tf_transformations.quaternion_from_euler(0.0, 0.0, self.theta_curr)
+    self.v_curr = self.v_avr
+    self.w_curr = self.yaw_rate
+
+    # Publish odometry message
+    self.publish_odom("odom", "base_footprint", self.x_curr, self.y_curr, self.quaternion, self.v_curr, self.w_curr, self.yaw_rate_publisher)
+    ```
+
+    #### 1.2 Single-track model
+    For the *Kinematic-Single-Track Model* (Odo1Track), the translation motion is determined by the average velocity of the rear wheels. The rotation is determined by the geometric orientation of the kinematic side-slip angles.
+
+    and for a vehicle without rear axle steering $\beta_R = 0$ in:
+
+    $$
+    \begin{pmatrix}
+    x_k \\
+    y_k \\
+    \theta_k \\
+    \beta_k \\
+    v_k \\
+    \omega_k^x
+    \end{pmatrix}
+    =
+    \begin{pmatrix}
+    x_{k-1} + v_{k-1} \cdot \Delta t \cdot \cos\left(\beta_{k-1} + \theta_{k-1} + \frac{\omega_{k-1} \cdot \Delta t}{2}\right) \\
+    y_{k-1} + v_{k-1} \cdot \Delta t \cdot \sin\left(\beta_{k-1} + \theta_{k-1} + \frac{\omega_{k-1} \cdot \Delta t}{2}\right) \\
+    \theta_{k-1} + \omega_{k-1} \cdot \Delta t \\
+    0 \\
+    \frac{\tilde{v}^x_{RL,k} + \tilde{v}^x_{RR,k}}{2} \\
+    \frac{v_{k-1}}{r_b} \tan(\beta^x_{F,k})
+    \end{pmatrix}
+    $$
+
+   where:
+    - $x_{k}, y_{k}$ is Position coordinates of vehicle,
+    - $\theta_k$ is Angular Position in z axis of vehicle, 
+    - $\beta_k$ is Slip angle of vehicle, 
+    - $v_{k}$ is Linear Velocity of vehicle,
+    - $\omega_k$ is Angular velocity of vehicle,
+    - $\Delta t$ is Time step, 
+    - $\tilde{v}^x_{RL,k}, \tilde{v}^x_{RR,k}$ is Rear Left/Right wheel velocities.
+    - $r_b$ is Wheel base
+    - $\beta^x_{F,k}$ is side-slip angles at between front wheel.
+
+    Can implement in code:
+
+    ```python
+    def delta_steering(self, delta_L, delta_R, wheelbase, track_width, steering_ratio):
+        delta_ack_L = math.atan((wheelbase * math.tan(delta_L)) / (wheelbase - 0.5 * track_width * math.tan(delta_L)))
+        delta_ack_R = math.atan((wheelbase * math.tan(delta_R)) / (wheelbase + 0.5 * track_width * math.tan(delta_R)))
+        delta_ack = (delta_ack_L + delta_ack_R) / 2
+        delta_steer = delta_ack * steering_ratio
+        return delta_steer
+
+    def Odo1Track(self):
+    # Compute new pose  
+    delta_steer = self.delta_steering(self.delta_L, self.delta_R, self.wheelbase, self.track_width, self.steering_ratio)
+    self.x_curr_1Track = self.x_curr_1Track + (self.v_curr_1Track * self.dt * math.cos(self.theta_curr_1Track + self.BETA + ((self.w_curr_1Track * self.dt) / 2)))
+    self.y_curr_1Track = self.y_curr_1Track + (self.v_curr_1Track * self.dt * math.sin(self.theta_curr_1Track + self.BETA + ((self.w_curr_1Track * self.dt) / 2)))
+    self.theta_curr_1Track = self.theta_curr_1Track + (self.w_curr_1Track * self.dt)
+    self.quaternion_1Track = tf_transformations.quaternion_from_euler(0.0, 0.0, self.theta_curr_1Track)
+    self.v_curr_1Track = self.v_avr
+    self.w_curr_1Track = (self.v_curr_1Track / self.wheelbase) * math.tan(delta_steer)
+
+    # Publish odometry message
+    self.publish_odom("odom", "base_footprint", self.x_curr_1Track, self.y_curr_1Track, self.quaternion_1Track, self.v_curr_1Track, self.w_curr_1Track, self.single_track_publisher)
+    ```
+
+    #### 1.3 Double-track model
+    The Kinematic-Double-Track Model determines the pose solely on the basis of two single wheel velocities. The translation motion is calculated by the average absolute value of the velocities of the two wheels. The rotation is determined on the basis of the velocity-difference with respect to the single wheel angles and the wheel contact points
+
+    For a vehicle without rear axle steering $\delta^x_R = 0 ⇒ \delta_{RL},\delta_{RR} = 0$ the simplest form can be build: the *Kinematic-Double-Track Model* (Odo2Track) sometimes also called *Differential-Velocity Model*:
+
+    $$
+    \begin{pmatrix}
+    x_k \\
+    y_k \\
+    \theta_k \\
+    \beta_k \\
+    v_k \\
+    \omega_k^x
+    \end{pmatrix}
+    =
+    \begin{pmatrix}
+    x_{k-1} + v_{k-1} \cdot \Delta t \cdot \cos\left(\beta_{k-1} + \theta_{k-1} + \frac{\omega_{k-1} \cdot \Delta t}{2}\right) \\
+    y_{k-1} + v_{k-1} \cdot \Delta t \cdot \sin\left(\beta_{k-1} + \theta_{k-1} + \frac{\omega_{k-1} \cdot \Delta t}{2}\right) \\
+    \theta_{k-1} + \omega_{k-1} \cdot \Delta t \\
+    0 \\
+    \frac{\tilde{v}^x_{RL,k} + \tilde{v}^x_{RR,k}}{2} \\
+    \frac{\tilde{v}^x_{RR,k} - \tilde{v}^x_{RL,k}}{r_{RR,y} - r_{RL,y}}
+    \end{pmatrix}
+    $$
+
+   where:
+    - $x_{k}, y_{k}$ is Position coordinates of vehicle,
+    - $\theta_k$ is Angular Position in z axis of vehicle, 
+    - $\beta_k$ is Slip angle of vehicle, 
+    - $v_{k}$ is Linear Velocity of vehicle,
+    - $\omega_k$ is Angular velocity of vehicle,
+    - $\Delta t$ is Time step, 
+    - $\tilde{v}^x_{RL,k}, \tilde{v}^x_{RR,k}$ is Rear Left/Right wheel velocities,
+    - $r_{RR,y} - r_{RL,y}$ is Track Width.
+
+    Can implement in code:
+    ```python
+    def Odo2Track(self):
+    # Compute new pose  
+    self.x_curr_2Track = self.x_curr_2Track + (self.v_curr_2Track * self.dt * math.cos(self.theta_curr_2Track + self.BETA + ((self.w_curr_2Track * self.dt) / 2)))
+    self.y_curr_2Track = self.y_curr_2Track + (self.v_curr_2Track * self.dt * math.sin(self.theta_curr_2Track + self.BETA + ((self.w_curr_2Track * self.dt) / 2)))
+    self.theta_curr_2Track = self.theta_curr_2Track + (self.w_curr_2Track * self.dt)
+    self.quaternion_2Track = tf_transformations.quaternion_from_euler(0.0, 0.0, self.theta_curr_2Track)
+    self.v_curr_2Track = self.v_avr
+    self.w_curr_2Track = (self.v_rr - self.v_rl) / self.track_width
+
+    # Publish odometry message
+    self.publish_odom("odom", "base_footprint", self.x_curr_2Track, self.y_curr_2Track, self.quaternion_2Track, self.v_curr_2Track, self.w_curr_2Track, self.double_track_publisher)
+    ```
+
 ## Varidation
 ### Result
 ### 1. No-slip
