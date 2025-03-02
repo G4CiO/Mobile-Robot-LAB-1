@@ -357,7 +357,11 @@ This node simulates GPS data based on ground truth odometry input. The generated
 
 ## Sampling Data for R_matrix 
 We can determine the value of \( R \) by calculating the covariance of the difference between wheel odometry and ground truth. For the GPS node, we will set \( R \) to match the parameters configured in the GPS node.
- 1. run sampling node for colelcting and export covariance of each wheel_odom topologies
+ 1. run sampling node for collecting and export covariance of each wheel_odom topologies
+```bash
+ros2 launch limo_bringup limo_bringup.launch.py steering_mode:=ackermann
+```
+
 ```bash
 ros2 run limo_localization plot_odom.py
 ```
@@ -552,7 +556,9 @@ now it a bit better now
 ![EKF Image](image/EKF_V2_compare.png)
 
 Now let's try running it without ground truth but EKF odometry instead
-
+```
+ros2 launch limo_bringup limo_bringup.launch.py steering_mode:=ackermann
+```
 ```
 ros2 run limo_controller controller_server.py --ros-args -p control_mode:=pure_pursuit -p odom_source:=ekf_odom
 ```
