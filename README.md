@@ -345,48 +345,77 @@ This node simulates GPS data based on ground truth odometry input. The generated
 
 ## EKF Fusion Strategy
 ![EKF Image](image/EKF_rqt.png)
+# Extended Kalman Filter (EKF) Fusion Overview
+
+## Introduction
+This document provides an overview of the sensor fusion process using an Extended Kalman Filter (EKF) for a mobile robot. The fusion includes multiple odometry sources, GPS, and IMU data. Each data source is fused into the state estimation while considering different state contributions and measurement models.
+
+## State Vector Definition
+The EKF maintains a 15-dimensional state vector:
+
+$$
+x = \begin{bmatrix}x & y & z & roll & pitch & yaw & v_x & v_y & v_z & \omega_x & \omega_y & \omega_z & a_x & a_y & a_z \end{bmatrix}^T
+$$
+
+where:
+- \( (x, y, z) \) represents the position.
+- \( (roll, pitch, yaw) \) represents the orientation in Euler angles.
+- \( (v_x, v_y, v_z) \) represents the linear velocity.
+- \( (\omega_x, \omega_y, \omega_z) \) represents the angular velocity.
+- \( (a_x, a_y, a_z) \) represents the linear acceleration.
+
+## Sensor Fusion Strategy
+The following sensors provide measurements that are fused into the EKF:
+
 ### Wheel Odometry
 Wheel odometry sources include:
-1. **Yaw Rate Odometry** (\( /odometry/yaw_rate \))
-2. **Single-Track Model Odometry** (\( /odometry/single_track \))
-3. **Double-Track Model Odometry** (\( /odometry/double_track \))
+1. **Yaw Rate Odometry** ($/odometry/yaw_rate$)
+2. **Single-Track Model Odometry** ($/odometry/single_track$)
+3. **Double-Track Model Odometry** ($/odometry/double_track$)
 
 Each of these sources provides full 12-dimensional measurements:
-\[
+
+$$
 \mathbf{z_{odom}} = \begin{bmatrix}x & y & z & roll & pitch & yaw & v_x & v_y & v_z & \omega_x & \omega_y & \omega_z \end{bmatrix}^T
-\]
+$$
+
 These measurements are fused into the corresponding state variables in \( x \).
 
 #### Observation Matrix (\( H \)) for Odometry:
-\[
+
+$$
 H_{odom} = \begin{bmatrix} I_{3 \times 3} & 0 & 0 & 0 & 0 \\ 0 & I_{3 \times 3} & 0 & 0 & 0 \\ 0 & 0 & I_{3 \times 3} & 0 & 0 \\ 0 & 0 & 0 & I_{3 \times 3} & 0 \end{bmatrix}
-\]
+$$
 
 where \( I_{3 \times 3} \) is the identity matrix.
 
 ### GPS Odometry
 GPS provides only position measurements:
-\[
+
+$$
 \mathbf{z_{GPS}} = \begin{bmatrix}x & y & z \end{bmatrix}^T
-\]
+$$
 
 #### Observation Matrix (\( H \)) for GPS:
-\[
+
+$$
 H_{GPS} = \begin{bmatrix} I_{3 \times 3} & 0 & 0 & 0 & 0 \end{bmatrix}
-\]
+$$
 
 This means GPS updates only the position variables in the state.
 
 ### IMU Sensor
 IMU measurements consist of:
-\[
+
+$$
 \mathbf{z_{IMU}} = \begin{bmatrix} roll & pitch & yaw & \omega_x & \omega_y & \omega_z & a_x & a_y & a_z \end{bmatrix}^T
-\]
+$$
 
 #### Observation Matrix (\( H \)) for IMU:
-\[
+
+$$
 H_{IMU} = \begin{bmatrix} 0 & I_{3 \times 3} & 0 & 0 & 0 \\ 0 & 0 & 0 & I_{3 \times 3} & 0 \\ 0 & 0 & 0 & 0 & I_{3 \times 3} \end{bmatrix}
-\]
+$$
 
 The IMU updates orientation, angular velocity, and linear acceleration states.
 
@@ -407,6 +436,11 @@ The IMU updates orientation, angular velocity, and linear acceleration states.
    - Each sensor update is performed sequentially based on availability.
    - The Kalman gain \( K \) is computed for each update.
    - The state \( x \) and covariance \( P \) are updated accordingly.
+
+## Conclusion
+This EKF fusion strategy effectively combines data from multiple odometry sources, GPS, and IMU. The fusion framework is designed to maximize state estimation accuracy while ensuring real-time performance. By structuring the observation models correctly, we ensure that each sensor contributes optimally to the final state estimation.
+
+
 ## Meaning of Q and R
 1. Q (Process Noise Covariance)
 - Represents uncertainty or inaccuracies in the system model.
