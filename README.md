@@ -476,7 +476,6 @@ First *Spawn robot* by command from LAB 1.1 then
 - **Limitations**:
     - May have sway at low speeds (Low-speed instability). It can fix by add softening constant in controller.
     - May have Overshoot if the parameter values ​​are not appropriate.
-    - Cannot plan ahead for rapidly changing paths.
 ## Varidation
 ### Result
 
