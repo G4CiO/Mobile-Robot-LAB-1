@@ -125,23 +125,6 @@
     The model also uses the average rear wheel velocities as the information on the translation motion. For a vehicle without rear axle steering $\delta^x_R = 0 $, the state update equation is:
 
     ![Yaw rate](./image/1.png)
-    $$\begin{pmatrix}
-    x_k \\
-    y_k \\
-    \theta_k \\
-    \beta_k \\
-    v_k \\
-    \omega_k^x
-    \end{pmatrix}
-    =
-    \begin{pmatrix}
-    x_{k-1} + v_{k-1} \cdot \Delta t \cdot \cos\left(\beta_{k-1} + \theta_{k-1} + \frac{\omega_{k-1} \cdot \Delta t}{2}\right) \\
-    y_{k-1} + v_{k-1} \cdot \Delta t \cdot \sin\left(\beta_{k-1} + \theta_{k-1} + \frac{\omega_{k-1} \cdot \Delta t}{2}\right) \\
-    \theta_{k-1} + \omega_{k-1} \cdot \Delta t \\
-    0 \\
-    \frac{\tilde{v}^x_{RL,k} + \tilde{v}^x_{RR,k}}{2} \\
-    \omega_k^x
-    \end{pmatrix}$$
 
    where:
     - $x_{k}, y_{k}$ is Position coordinates of vehicle,
