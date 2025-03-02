@@ -92,7 +92,6 @@ class ControllerServer(Node):
         # Timer for control loop
         self.dt = 0.01
         self.timer = self.create_timer(self.dt, self.timer_callback)  # 100 Hz
-        self.last_time = self.get_clock().now()
         
     def load_path(self):
         with open(self.path_path, 'r') as file:
