@@ -345,24 +345,6 @@ This node simulates GPS data based on ground truth odometry input. The generated
 
 ## EKF Fusion Strategy
 ![EKF Image](image/EKF_rqt.png)
-# Extended Kalman Filter (EKF) Fusion Overview
-
-## Introduction
-This document provides an overview of the sensor fusion process using an Extended Kalman Filter (EKF) for a mobile robot. The fusion includes multiple odometry sources, GPS, and IMU data. Each data source is fused into the state estimation while considering different state contributions and measurement models.
-
-## State Vector Definition
-The EKF maintains a 15-dimensional state vector:
-
-$$
-x = \begin{bmatrix}x & y & z & roll & pitch & yaw & v_x & v_y & v_z & \omega_x & \omega_y & \omega_z & a_x & a_y & a_z \end{bmatrix}^T
-$$
-
-where:
-- \( (x, y, z) \) represents the position.
-- \( (roll, pitch, yaw) \) represents the orientation in Euler angles.
-- \( (v_x, v_y, v_z) \) represents the linear velocity.
-- \( (\omega_x, \omega_y, \omega_z) \) represents the angular velocity.
-- \( (a_x, a_y, a_z) \) represents the linear acceleration.
 
 ## Sensor Fusion Strategy
 The following sensors provide measurements that are fused into the EKF:
@@ -387,7 +369,7 @@ $$
 H_{odom} = \begin{bmatrix} I_{3 \times 3} & 0 & 0 & 0 & 0 \\ 0 & I_{3 \times 3} & 0 & 0 & 0 \\ 0 & 0 & I_{3 \times 3} & 0 & 0 \\ 0 & 0 & 0 & I_{3 \times 3} & 0 \end{bmatrix}
 $$
 
-where \( I_{3 \times 3} \) is the identity matrix.
+where $I_{3 \times 3}$ is the identity matrix.
 
 ### GPS Odometry
 GPS provides only position measurements:
@@ -404,27 +386,13 @@ $$
 
 This means GPS updates only the position variables in the state.
 
-### IMU Sensor
-IMU measurements consist of:
-
-$$
-\mathbf{z_{IMU}} = \begin{bmatrix} roll & pitch & yaw & \omega_x & \omega_y & \omega_z & a_x & a_y & a_z \end{bmatrix}^T
-$$
-
-#### Observation Matrix (\( H \)) for IMU:
-
-$$
-H_{IMU} = \begin{bmatrix} 0 & I_{3 \times 3} & 0 & 0 & 0 \\ 0 & 0 & 0 & I_{3 \times 3} & 0 \\ 0 & 0 & 0 & 0 & I_{3 \times 3} \end{bmatrix}
-$$
-
-The IMU updates orientation, angular velocity, and linear acceleration states.
-
 ## Summary of Sensor Contributions
 | Sensor  | Measured States      | Fused States  |
 |---------|----------------------|--------------|
-| Wheel Odometry | \( x, y, z, roll, pitch, yaw, v_x, v_y, v_z, \omega_x, \omega_y, \omega_z \) | Full 12 states |
-| GPS  | \( x, y, z \) | Position only |
-| IMU  | \( roll, pitch, yaw, \omega_x, \omega_y, \omega_z, a_x, a_y, a_z \) | Orientation, angular velocity, and acceleration |
+| Wheel Odometry | $x, y, z, roll, pitch, yaw, v_x, v_y, v_z, \omega_x, \omega_y, \omega_z$ | Full 12 states |
+| GPS  | $x, y, z$ | Position only |
+
+
 
 ## EKF Process
 1. **Prediction Step:**
