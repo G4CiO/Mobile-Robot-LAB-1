@@ -339,8 +339,8 @@ class EKFFullNode(Node):
         self.double_track_sub = self.create_subscription(
             Odometry, '/odometry/double_track', self.double_track_callback, 10)
             
-        self.imu_sub = self.create_subscription(
-            Imu, '/imu', self.imu_callback, 10)
+        # self.imu_sub = self.create_subscription(
+        #     Imu, '/imu', self.imu_callback, 10)
         self.gps_sub = self.create_subscription(
             Odometry, '/gps/odom', self.gps_callback, 10)
 

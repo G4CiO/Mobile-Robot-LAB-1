@@ -343,7 +343,70 @@ This node simulates GPS data based on ground truth odometry input. The generated
     ```
 
 
+## EKF Fusion Strategy
+![EKF Image](image/EKF_rqt.png)
+### Wheel Odometry
+Wheel odometry sources include:
+1. **Yaw Rate Odometry** (\( /odometry/yaw_rate \))
+2. **Single-Track Model Odometry** (\( /odometry/single_track \))
+3. **Double-Track Model Odometry** (\( /odometry/double_track \))
 
+Each of these sources provides full 12-dimensional measurements:
+\[
+\mathbf{z_{odom}} = \begin{bmatrix}x & y & z & roll & pitch & yaw & v_x & v_y & v_z & \omega_x & \omega_y & \omega_z \end{bmatrix}^T
+\]
+These measurements are fused into the corresponding state variables in \( x \).
+
+#### Observation Matrix (\( H \)) for Odometry:
+\[
+H_{odom} = \begin{bmatrix} I_{3 \times 3} & 0 & 0 & 0 & 0 \\ 0 & I_{3 \times 3} & 0 & 0 & 0 \\ 0 & 0 & I_{3 \times 3} & 0 & 0 \\ 0 & 0 & 0 & I_{3 \times 3} & 0 \end{bmatrix}
+\]
+
+where \( I_{3 \times 3} \) is the identity matrix.
+
+### GPS Odometry
+GPS provides only position measurements:
+\[
+\mathbf{z_{GPS}} = \begin{bmatrix}x & y & z \end{bmatrix}^T
+\]
+
+#### Observation Matrix (\( H \)) for GPS:
+\[
+H_{GPS} = \begin{bmatrix} I_{3 \times 3} & 0 & 0 & 0 & 0 \end{bmatrix}
+\]
+
+This means GPS updates only the position variables in the state.
+
+### IMU Sensor
+IMU measurements consist of:
+\[
+\mathbf{z_{IMU}} = \begin{bmatrix} roll & pitch & yaw & \omega_x & \omega_y & \omega_z & a_x & a_y & a_z \end{bmatrix}^T
+\]
+
+#### Observation Matrix (\( H \)) for IMU:
+\[
+H_{IMU} = \begin{bmatrix} 0 & I_{3 \times 3} & 0 & 0 & 0 \\ 0 & 0 & 0 & I_{3 \times 3} & 0 \\ 0 & 0 & 0 & 0 & I_{3 \times 3} \end{bmatrix}
+\]
+
+The IMU updates orientation, angular velocity, and linear acceleration states.
+
+## Summary of Sensor Contributions
+| Sensor  | Measured States      | Fused States  |
+|---------|----------------------|--------------|
+| Wheel Odometry | \( x, y, z, roll, pitch, yaw, v_x, v_y, v_z, \omega_x, \omega_y, \omega_z \) | Full 12 states |
+| GPS  | \( x, y, z \) | Position only |
+| IMU  | \( roll, pitch, yaw, \omega_x, \omega_y, \omega_z, a_x, a_y, a_z \) | Orientation, angular velocity, and acceleration |
+
+## EKF Process
+1. **Prediction Step:**
+   - The system propagates the state forward using the dynamic model.
+   - The Jacobian \( F \) is computed to linearize the system.
+   - The process noise covariance \( Q \) is added.
+
+2. **Update Step:**
+   - Each sensor update is performed sequentially based on availability.
+   - The Kalman gain \( K \) is computed for each update.
+   - The state \( x \) and covariance \( P \) are updated accordingly.
 ## Meaning of Q and R
 1. Q (Process Noise Covariance)
 - Represents uncertainty or inaccuracies in the system model.
