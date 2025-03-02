@@ -1,4 +1,8 @@
 # Mobile-Robot-LAB-1
+# Member
+#### 1. Chayanin     Napia       No. 65340500009
+#### 2. Natthaphat   Sookpanya   No. 65340500023
+
 
 # Install Package
 1. Create workspace and src folder and go in src folder
@@ -26,7 +30,7 @@
 
 # LAB 1.1 Kinematics of Mobile Robot
 ## Implementation
-### How to use Lab.
+### How to use this Lab.
 1. Spawn robot in gazebo and publish three model of odometry.
 
 - Set to **Ackermann** Mode (Default):
@@ -65,6 +69,9 @@
 3. Import robot to Gazebo.
 
     I create package [limo_gazebo](limo_gazebo/) for load world in gazebo ([load_world_into_gazebo.launch.py](limo_gazebo/launch/load_world_into_gazebo.launch.py)), spawn robot in gazebo, and spawn controller for control robot ([sim.launch.py](limo_gazebo/launch/sim.launch.py)).
+
+    <img src=./image/map.png width="300" height="200"/>
+    <img src=./image/spawn.png width="300" height="200"/>
 
 ### Inverse Kinematics
 1. Create node [steering_model_node.py](limo_controller/scripts/steering_model_node.py) for compute Inverse Kinematics that get **cmd_vel** and turn to **wheel speed** of robot.
@@ -295,6 +302,8 @@
     - Still have error from wheel odometry.
 
 # LAB 1.2 Path Tracking Controller
+## Implementation
+### How to use this Lab.
 First *Spawn robot* by command from LAB 1.1 then
 1. Run controller server
 - Set to **Pure Pursuit** Mode (Default)
@@ -313,6 +322,165 @@ First *Spawn robot* by command from LAB 1.1 then
     ```bash
     ros2 service call /clear_path std_srvs/srv/Empty
     ```
+### Create node [controller_server.py](limo_controller/scripts/controller_server.py) for compute cmd_vel from ground truth odometry by 3 controller.
+### 1. PID Controller
+- **Working principle**: Use the error value between the position or angle of the robot and the desired path, and use proportional (P), integral (I) and derivative (D) controllers to adjust the control value to make the robot run along the path.
+- **Suitability**:
+    - Suitable for simple routes such as straight lines or simple curves.
+    - Works well at low to medium speeds.
+    - The P, I, D parameters must be carefully tuned to ensure system stability
+- **Limitations**:
+    - Cannot handle sharp corners well.
+    - May cause overshoot or oscillation if the parameters are not tuned well.
+    - Cannot consider information about the path changes in advance.
+
+### 2. Pure Pursuit Controller
+- **Working principle**: 
+    - In the pure pursuit method a target point (TP) on the desired path is identified, which is a **look-ahead distance** $l_d$ away from the vehicle. The angle $\delta$ is chosen such that the vehicle will reach the target point according to the kinematic bicycle model.
+    - The $l_d$ is a parameter that depend on the speed $v$ via $l_d = K_{dd}v$ , $K_{dd}$ can tuned to enforce a minimal and maximal $l_d$, so as to avoid undesirable behavior at very high and very low speeds.
+    - Calculates the appropriate turning angle using circle of radius $l_d$ around the center of the rear wheel. The intersection of this circle with the path is our target point TP. So the vehicle will move along the circular arc, which is determined by the front wheel angle $\delta$
+    - We can determined front wheel angle $\delta$ by this formular
+
+        $$\delta = \arctan(\frac{2L\sin(\alpha)}{l_d})$$
+
+    - and from above $l_d = K_{dd}v$ so we will get new formular
+
+        $$\delta = \arctan(\frac{2L\sin(\alpha)}{K_{dd}v})$$
+
+        where:
+        - $\delta$ is front wheel angle or steering angle of front wheel,
+        - $L$ is wheel base, 
+        - $\alpha$ is Heading error or angle from target point to vehicle, 
+        - $l_d$ is look-ahead distance,
+        - $K_{dd}$ is parameter for tune look-ahead distance depend on the speed,
+        - $v$ is speed of vihecle.
+
+    - Can implement in code:
+        ```python
+        def pure_pursuit_control(self):
+            wheelbase = self.get_parameter('wheelbase').value
+            if self.current_target_idx >= len(self.path):
+                # self.current_target_idx = 0  # Reset index to loop the path
+                self.pub_cmd(0.0, 0.0)
+                return # Stop
+            
+            # Search nearest point index
+            self.serch_nearest_point_index()
+
+            # Implement Here
+            target = self.path[self.current_target_idx]
+            target_x, target_y = target['x'], target['y']
+
+            dx = target_x - self.robot_x
+            dy = target_y - self.robot_y
+            distance_error = math.hypot(dx, dy)
+
+            # If distance < lookahead_distance, it moves to the next waypoint.
+            if distance_error < self.lookahead_distance:
+                self.current_target_idx += 1
+
+            # Heading Angle Calculation
+            target_yaw = math.atan2(dy,dx)
+            alpha = target_yaw - self.robot_yaw
+            # Normalize an angle to [-pi, pi]
+            alpha = self.normalize_angle(alpha)
+
+            # Steering Angle Calculation (β)
+            self.lookahead_distance = np.clip(self.K_dd * self.linear_speed_pure, self.min_ld, self.max_ld)
+            beta = math.atan2(2 * wheelbase * math.sin(alpha) / self.lookahead_distance, 1.0)
+            beta = max(-0.6, min(beta, 0.6))
+
+            # Angular Velocity Calculation (ω)
+            angular_velocity = (self.linear_speed_pure * math.tan(beta)) / wheelbase
+
+            # Publish cmd_vel
+            self.pub_cmd(self.linear_speed_pure, angular_velocity)
+        ```
+- **Suitability**:
+    - Suitable for smooth curves without sudden changes.
+    - Can be used at medium to high speeds if the look-ahead distance value is set appropriately.
+- **Limitations**:
+    - Cannot handle tight curves well, as it can cause high error.
+    - If the look-ahead distance is set too high, the robot may deviate from the path.
+
+### 3. Stanley Control
+- **Working principle**:
+    - The Stanley method is a nonlinear feedback function of the cross track error $e_{fa}$, measured from the center of the front axle to the nearest path point $(c_x, c_y)$, Co-locating the point of control with the steered front wheels allows for an intuitive control law, where the first term simply keeps the wheels aligned with the given path by setting the steering angle $\delta$ equal to the heading error
+
+        $$\theta_e = \theta - \theta_p$$
+
+        where:
+        - $\theta_e$ is heading error,
+        - $\theta$ is  heading of the vehicle,
+        - $\theta_p$ is  heading of the path at $(c_x, c_y)$.
+    - When efa is non-zero, the second term adjusts δ such that the intended trajectory intersects the path tangent from (cx, cy). The resulting steering control law is given as
+
+        $$\delta(t) = \theta_e(t) + \tan^{-1}(\frac{ke_{fa}(t)}{v_x(t)})$$
+
+        where:
+        - $\delta$ is steering angle,
+        - $k$ is a gain parameter of wheels are steered further towards the path,
+        - $e_{fa}$ is cross track error,
+        - $v_x$ is linear velocity in x axis of vehicle.
+    - But at Low speed operation can cause numerical instability, So we will add softening constant $k_s$ to controller
+
+        $$\delta(t) = \theta_e(t) + \tan^{-1}(\frac{ke_{fa}(t)}{k_s + v_x(t)})$$
+
+    - Can implement in code:
+        ```python
+        def stanley_control(self):
+            wheelbase = self.get_parameter('wheelbase').value
+            if self.current_target_idx >= len(self.path) - 1:
+                # self.current_target_idx = 0  # Reset index to loop the path
+                self.pub_cmd(0.0, 0.0)
+                return # Stop
+
+            # Calc front axle position
+            fx = self.robot_x + (wheelbase/2 * np.cos(self.robot_yaw))
+            fy = self.robot_y + (wheelbase/2 * np.sin(self.robot_yaw))
+
+            # Search nearest point index
+            dx = [fx - target_x['x'] for target_x in self.path]
+            dy = [fy - target_y['y'] for target_y in self.path]
+            d = np.hypot(dx, dy)
+            self.current_target_idx = np.argmin(d)
+            target = self.path[self.current_target_idx]
+
+            # Project RMS error onto front axle vector
+            front_axle_vec = [-np.cos(self.robot_yaw + np.pi / 2),-np.sin(self.robot_yaw + np.pi / 2)]
+            e_fa = np.dot([dx[self.current_target_idx], dy[self.current_target_idx]], front_axle_vec)
+            
+            # Compute heading error
+            theta_e = target['yaw'] - self.robot_yaw
+            # Normalize an angle to [-pi, pi]
+            theta_e = self.normalize_angle(theta_e)
+
+            # Stanley control formula
+            if self.v != 0.0:
+                delta = theta_e + np.arctan2(self.k * e_fa, self.ks + self.v)
+                delta = max(-0.6, min(delta, 0.6))
+            else:
+                delta = 0.0
+
+            linear_velocity = self.linear_speed_stan.get_control(self.target_speed - self.v, self.dt)
+            # Angular Velocity Calculation (ω)
+            angular_velocity = (linear_velocity * math.tan(delta)) / wheelbase
+
+            # Publish cmd_vel
+            self.pub_cmd(linear_velocity, angular_velocity)
+        ```
+
+- **Suitability**:
+    - Suitable for use at medium to high speeds.
+    - Can handle relatively tight curves better than Pure Pursuit.
+    - Has better stability due to Heading error control.
+- **Limitations**:
+    - May have sway at low speeds (Low-speed instability). It can fix by add softening constant in controller.
+    - May have Overshoot if the parameter values ​​are not appropriate.
+    - Cannot plan ahead for rapidly changing paths.
+## Varidation
+### Result
+
 # LAB 1.3 Extended kalman filter && Tuning Q and R 
 
 ## fake_gps_node

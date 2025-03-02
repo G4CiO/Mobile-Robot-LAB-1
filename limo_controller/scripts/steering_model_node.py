@@ -46,6 +46,7 @@ class SteeringModelNode(Node):
             self.delta_steer = 0.0
         else:
             self.delta_steer = math.atan(wheelbase * self.omega / self.v) if self.v != 0 else 0
+            self.delta_steer = max(-0.6, min(self.delta_steer, 0.6))
             delta_ack = self.delta_steer / steering_ratio
 
             delta_L = math.atan((wheelbase * math.tan(delta_ack)) / (wheelbase - 0.5 * track_width * math.tan(delta_ack)))

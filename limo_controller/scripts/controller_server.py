@@ -58,7 +58,7 @@ class ControllerServer(Node):
         self.robot_x = 0.0
         self.robot_y = 0.0
         self.robot_yaw = 0.0
-        self.state = np.zeros(3)  # [x, y, yaw]
+        self.state = 0
 
         pkg_name = 'limo_controller'
         path_pkg_share_path = get_package_share_directory(pkg_name)
@@ -67,20 +67,21 @@ class ControllerServer(Node):
         self.path_path = os.path.join(ws_path, 'src/Mobile-Robot-LAB-1', pkg_name, 'config', file)
 
         # PID controllers for linear and angular velocities
-        self.linear_pid = PIDController(Kp=0.5, Ki=0.0, Kd=0.0)
-        self.angular_pid = PIDController(Kp=2.0, Ki=0.0, Kd=0.0)
-        self.thresold_distance_error = 1.0
+        self.linear_pid = PIDController(Kp=2.0, Ki=0.0, Kd=0.0)
+        self.angular_pid = PIDController(Kp=10.0, Ki=0.0, Kd=0.0)
+        self.thresold_distance_error = 0.5
 
         # Pure Puresuit controllers
-        self.state = 0
-        self.linear_speed_pure = PIDController(Kp=1.0, Ki=0.0, Kd=0.0)
-        self.lookahead_distance = 0.6 # Max = 4.5
+        self.linear_velo_pure = 3.0
+        self.K_dd = 1.0
+        self.min_ld = 0.5
+        self.max_ld = 4.5
+        self.lookahead_distance = 0.5
 
         # Stanley controllers
+        self.linear_velo_stan = 3.0
         self.k = 1.0
         self.ks = 2.5 # Softening constant (ks) = If increase ks, It will decrease swing in steering wheel when at low speed
-        self.target_speed = 1.0
-        self.linear_speed_stan = PIDController(Kp=0.7, Ki=0.0, Kd=0.0)
 
         # Load path from YAML file
         self.path = self.load_path()
@@ -144,7 +145,7 @@ class ControllerServer(Node):
             return # Stop
 
         # Search nearest point index
-        # self.serch_nearest_point_index()
+        self.serch_nearest_point_index()
 
         target = self.path[self.current_target_idx]
         target_x, target_y = target['x'], target['y']
@@ -168,7 +169,7 @@ class ControllerServer(Node):
         angular_velocity = self.angular_pid.get_control(yaw_error, self.dt)
 
         beta = math.atan(angular_velocity * wheelbase / linear_velocity)
-        beta = max(-0.523598767, min(beta, 0.523598767))
+        beta = max(-0.6, min(beta, 0.6))
         angular_velocity = (linear_velocity * math.tan(beta)) / wheelbase
 
         # Publish velocity command
@@ -182,7 +183,7 @@ class ControllerServer(Node):
             return # Stop
         
         # Search nearest point index
-        # self.serch_nearest_point_index()
+        self.serch_nearest_point_index()
 
         # Implement Here
         target = self.path[self.current_target_idx]
@@ -203,15 +204,15 @@ class ControllerServer(Node):
         alpha = self.normalize_angle(alpha)
 
         # Steering Angle Calculation (β)
+        self.lookahead_distance = np.clip(self.K_dd * self.linear_speed_pure, self.min_ld, self.max_ld)
         beta = math.atan2(2 * wheelbase * math.sin(alpha) / self.lookahead_distance, 1.0)
-        beta = max(-0.523598767, min(beta, 0.523598767))
+        beta = max(-0.6, min(beta, 0.6))
 
-        linear_velocity = self.linear_speed_pure.get_control(distance_error, self.dt)
         # Angular Velocity Calculation (ω)
-        angular_velocity = (linear_velocity * math.tan(beta)) / wheelbase
+        angular_velocity = (self.linear_velo_pure * math.tan(beta)) / wheelbase
 
         # Publish cmd_vel
-        self.pub_cmd(linear_velocity, angular_velocity)
+        self.pub_cmd(self.linear_velo_pure, angular_velocity)
 
     def stanley_control(self):
         wheelbase = self.get_parameter('wheelbase').value
@@ -243,16 +244,15 @@ class ControllerServer(Node):
         # Stanley control formula
         if self.v != 0.0:
             delta = theta_e + np.arctan2(self.k * e_fa, self.ks + self.v)
-            delta = max(-0.523598767, min(delta, 0.523598767))
+            delta = max(-0.6, min(delta, 0.6))
         else:
             delta = 0.0
 
-        linear_velocity = self.linear_speed_stan.get_control(self.target_speed - self.v, self.dt)
         # Angular Velocity Calculation (ω)
-        angular_velocity = (linear_velocity * math.tan(delta)) / wheelbase
+        angular_velocity = (self.linear_velo_stan * math.tan(delta)) / wheelbase
 
         # Publish cmd_vel
-        self.pub_cmd(linear_velocity, angular_velocity)
+        self.pub_cmd(self.linear_velo_stan, angular_velocity)
 
 def main(args=None):
     rclpy.init(args=args)
