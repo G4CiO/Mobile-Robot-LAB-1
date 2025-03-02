@@ -125,7 +125,25 @@
     The model also uses the average rear wheel velocities as the information on the translation motion. For a vehicle without rear axle steering $\delta^x_R = 0 $, the state update equation is:
 
     ![Yaw rate](./image/1.png)
-
+    $$
+    \begin{pmatrix}
+    x_k \\
+    y_k \\
+    \theta_k \\
+    \beta_k \\
+    v_k \\
+    \omega_k^x
+    \end{pmatrix}
+    =
+    \begin{pmatrix}
+    x_{k-1} + v_{k-1} \cdot \Delta t \cdot \cos\left(\beta_{k-1} + \theta_{k-1} + \frac{\omega_{k-1} \cdot \Delta t}{2}\right) \\
+    y_{k-1} + v_{k-1} \cdot \Delta t \cdot \sin\left(\beta_{k-1} + \theta_{k-1} + \frac{\omega_{k-1} \cdot \Delta t}{2}\right) \\
+    \theta_{k-1} + \omega_{k-1} \cdot \Delta t \\
+    0 \\
+    \frac{\tilde{v}^x_{RL,k} + \tilde{v}^x_{RR,k}}{2} \\
+    \omega_k^x
+    \end{pmatrix}
+    $$
    where:
     - $x_{k}, y_{k}$ is Position coordinates of vehicle,
     - $\theta_k$ is Angular Position in z axis of vehicle, 
@@ -341,11 +359,15 @@ First *Spawn robot* by command from LAB 1.1 then
     - Calculates the appropriate turning angle using circle of radius $l_d$ around the center of the rear wheel. The intersection of this circle with the path is our target point TP. So the vehicle will move along the circular arc, which is determined by the front wheel angle $\delta$
     - We can determined front wheel angle $\delta$ by this formular
 
-        $$\delta = \arctan(\frac{2L\sin(\alpha)}{l_d})$$
+        $$
+        \delta = \arctan(\frac{2L\sin(\alpha)}{l_d})
+        $$
 
     - and from above $l_d = K_{dd}v$ so we will get new formular
 
-        $$\delta = \arctan(\frac{2L\sin(\alpha)}{K_{dd}v})$$
+        $$
+        \delta = \arctan(\frac{2L\sin(\alpha)}{K_{dd}v})
+        $$
 
         where:
         - $\delta$ is front wheel angle or steering angle of front wheel,
@@ -407,7 +429,9 @@ First *Spawn robot* by command from LAB 1.1 then
 - **Working principle**:
     - The Stanley method is a nonlinear feedback function of the cross track error $e_{fa}$, measured from the center of the front axle to the nearest path point $(c_x, c_y)$, Co-locating the point of control with the steered front wheels allows for an intuitive control law, where the first term simply keeps the wheels aligned with the given path by setting the steering angle $\delta$ equal to the heading error
 
-        $$\theta_e = \theta - \theta_p$$
+        $$
+        \theta_e = \theta - \theta_p
+        $$
 
         where:
         - $\theta_e$ is heading error,
@@ -415,7 +439,9 @@ First *Spawn robot* by command from LAB 1.1 then
         - $\theta_p$ is  heading of the path at $(c_x, c_y)$.
     - When efa is non-zero, the second term adjusts δ such that the intended trajectory intersects the path tangent from (cx, cy). The resulting steering control law is given as
 
-        $$\delta(t) = \theta_e(t) + \tan^{-1}(\frac{ke_{fa}(t)}{v_x(t)})$$
+        $$
+        \delta(t) = \theta_e(t) + \tan^{-1}(\frac{ke_{fa}(t)}{v_x(t)})
+        $$
 
         where:
         - $\delta$ is steering angle,
@@ -424,7 +450,9 @@ First *Spawn robot* by command from LAB 1.1 then
         - $v_x$ is linear velocity in x axis of vehicle.
     - But at Low speed operation can cause numerical instability, So we will add softening constant $k_s$ to controller
 
-        $$\delta(t) = \theta_e(t) + \tan^{-1}(\frac{ke_{fa}(t)}{k_s + v_x(t)})$$
+        $$
+        \delta(t) = \theta_e(t) + \tan^{-1}(\frac{ke_{fa}(t)}{k_s + v_x(t)})
+        $$
 
     - Can implement in code:
         ```python
