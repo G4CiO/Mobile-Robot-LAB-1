@@ -462,12 +462,11 @@ First *Spawn robot* by command from LAB 1.1 then
             else:
                 delta = 0.0
 
-            linear_velocity = self.linear_speed_stan.get_control(self.target_speed - self.v, self.dt)
             # Angular Velocity Calculation (ω)
-            angular_velocity = (linear_velocity * math.tan(delta)) / wheelbase
+            angular_velocity = (self.linear_velo_stan * math.tan(delta)) / wheelbase
 
             # Publish cmd_vel
-            self.pub_cmd(linear_velocity, angular_velocity)
+            self.pub_cmd(self.linear_velo_stan, angular_velocity)
         ```
 
 - **Suitability**:
