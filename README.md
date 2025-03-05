@@ -332,11 +332,11 @@ First *Spawn robot* by command from LAB 1.1 then
     $$u(t) = K_p e(t) + K_i \int e(t) dt + K_d \frac{d}{dt} e(t)$$
 
     where:
-    - $ u(t) $ is the control input (e.g., steering angle)
-    - $ e(t) = r(t) - y(t) $ is the error (difference between desired state $ r(t) $ and actual state $ y(t) $ e.g., cross track error)
-    - $ K_p $ is the proportional gain
-    - $ K_i $ is the integral gain
-    - $ K_d $ is the derivative gain
+    - $u(t)$ is the control input (e.g., steering angle)
+    - $e(t) = r(t) - y(t)$ is the error (difference between desired state $r(t)$ and actual state $y(t)$ e.g., cross track error)
+    - $K_p$ is the proportional gain
+    - $K_i$ is the integral gain
+    - $K_d$ is the derivative gain
 - Can implement in code:
     ```python  
     # For initialize PID Gain
