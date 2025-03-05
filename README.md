@@ -324,7 +324,65 @@ First *Spawn robot* by command from LAB 1.1 then
     ```
 ### Create node [controller_server.py](limo_controller/scripts/controller_server.py) for compute cmd_vel from ground truth odometry by 3 controller.
 ### 1. PID Controller
-- **Working principle**: Use the error value between the position or angle of the robot and the desired path, and use proportional (P), integral (I) and derivative (D) controllers to adjust the control value to make the robot run along the path.
+- **Working principle**: Use the cross track error value that have perpendicular direction with respect from front vehicle to the desired trajectory, and use proportional (P), integral (I) and derivative (D) controllers to adjust the control value to make the robot run along the path.
+    - Can implement in code:
+    ```python  
+    # For initialize PID Gain
+    class PIDController:
+    def __init__(self, Kp, Ki, Kd):
+        self.Kp = Kp
+        self.Ki = Ki
+        self.Kd = Kd
+        self.int_term = 0
+        self.derivative_term = 0
+        self.last_error = None
+    
+    def get_control(self, error, dt):
+        self.int_term += error*dt
+        if self.last_error is not None:
+            self.derivative_term = (error-self.last_error)/dt
+        self.last_error = error
+        return (self.Kp * error) + (self.int_term * self.Ki) + (self.derivative_term * self.Kd)
+
+    # For Calcuration in main
+    def pid_control(self):
+        wheelbase = self.get_parameter('wheelbase').value
+        if self.current_target_idx >= len(self.path):
+            # self.current_target_idx = 0  # Reset index to loop the path
+            self.pub_cmd(0.0, 0.0)
+            return # Stop
+
+        # target = self.path[self.current_target_idx]
+        # target_x, target_y = target['x'], target['y']
+
+        # Calc front axle position
+        fx = self.robot_x + (wheelbase/2 * np.cos(self.robot_yaw))
+        fy = self.robot_y + (wheelbase/2 * np.sin(self.robot_yaw))
+
+        # Search nearest point index
+        dx = [fx - target_x['x'] for target_x in self.path]
+        dy = [fy - target_y['y'] for target_y in self.path]
+        d = np.hypot(dx, dy)
+        self.current_target_idx = np.argmin(d)
+        # distance_error = d[self.current_target_idx]
+
+        # Project RMS error onto front axle vector
+        front_axle_vec = [-np.cos(self.robot_yaw + np.pi / 2),-np.sin(self.robot_yaw + np.pi / 2)]
+        e_fa = np.dot([dx[self.current_target_idx], dy[self.current_target_idx]], front_axle_vec)
+
+        # Get control inputs from PID controllers
+        # linear_velocity = self.linear_pid.get_control(distance_error, self.dt)
+        linear_velocity = 2.0
+        angular_velocity = self.angular_pid.get_control(e_fa, self.dt)
+
+        # Limit steering angle
+        beta = math.atan(angular_velocity * wheelbase / linear_velocity)
+        beta = max(-0.6, min(beta, 0.6))
+        angular_velocity = (linear_velocity * math.tan(beta)) / wheelbase
+
+        # Publish velocity command
+        self.pub_cmd(linear_velocity, angular_velocity)
+    ```
 - **Suitability**:
     - Suitable for simple routes such as straight lines or simple curves.
     - Works well at low to medium speeds.
@@ -474,7 +532,59 @@ First *Spawn robot* by command from LAB 1.1 then
     - May have Overshoot if the parameter values ​​are not appropriate.
 ## Varidation
 ### 1. PID Controller
-#### 1.1 P  
+#### 1.1 P Control
+![kp](./image/kp.png)
+We use *Cross Track Error $(e_p)$* or distance perpendicular direction with respect to the desired trajectory to define how far away from the desired path of vehicle.
+
+$$\delta = k_p(e_p)$$
+
+where:
+- $\delta$ is steering angle,
+- $kp$ is Proportional Gain,
+- $e_p$ is Cross Track error (m).
+#### Effect of $k_p$ in PID 
+- **Low $k_p = 1.0$**: The response is slow, and the vehicle takes a long time to converge to the desired trajectory, resulting in oscillations.
+- **Medium $k_p = 10.0$**: The trajectory follows the path more closely with reduced oscillations.
+- **High $k_p = 1000.0$**: The response is much faster and more accurate, but if $k_p$​ is too high, it may cause instability due to overshooting or high-frequency oscillations.
+#### Conclusion:
+- Increasing $k_p$ improves response time but can cause overshooting or oscillations if too high.
+- The system is still underdamped, as the vehicle does not settle perfectly on the trajectory path.
+
+#### 1.2 PD Control
+![kd](./image/kd.png)
+If we have only **P control** the vehicle can be crooked when it reaches the center line. The result of this controller will repeatedly overshoot the autual desire trajectory and not actually follow it, to correct this overshoot problem we need to use Cross Track Error Rate $(e_d)$ or how fast we are moving in a perpendicular direction with respect to the desired trajectory. If the vehicle are perfectly following the trajectory, Cross Track Error will be zero. 
+
+This is called a Derivative Term. Ii will multiplied gain $k_d$ and added to the proportional term
+
+$$\delta = k_p(e_p) + k_d(e_d)$$
+
+where:
+- $k_d$ is Derivative Gain,
+- $e_d$ is Cross Track error rate it equal $\frac{e_{p,k} - e_{p,k-1}}{dt}$
+
+#### Effect of $k_d$ in PID 
+- **Low $k_d = 1.0$**: The vehicle oscillates more around the path it call *Underdamped*, but it still follows the trajectory.
+- **Medium $k_d = 10.0$**: The oscillations are damped, and the trajectory is smoother with a cross track error rate close to zero. This is called *Critically Damped*.
+- **High $k_d = 20.0$**: The system will take a long time to correct for offsets it called *Overdamped*.
+#### Conclusion:
+- Adding $k_d$ improves stability by reducing oscillations and overshooting.
+- Higher $k_d$ values improve damping, but excessive values can slow down responsiveness.
+- A well-tuned PD controller helps the car smoothly follow the path without excessive overshooting.
+
+#### 1.3 PID Control
+![ki](./image/ki.png)
+Sometime vehicle have lane offset from desired trajectory path or *Steady State Error*. We will slove this ploblem by add integral term. This term sums up the cross track error and will increase if vehicle are spending more time on one side of the trajectory so it will make vehicle try to heading to trajectory path.
+
+$$\delta = k_p(e_p) + k_i(e_d) + k_i(e_i)$$
+
+where:
+- $k_i$ is Integral Gain,
+- $e_i$ is Steady State Error it equal $(e_{p,k} + e_{p,k-1}) * dt$
+
+#### Effect of $k_i$ in PID 
+- **Low $k_i = 0.00001$**: It can take too long to respond to these Dynamic changes and offset will increase.
+- **Medium $k_i = 0.001$**: It will be able to quickly correct for the misalignment of front vehicle and return to normal performance.
+- **High $k_i = 50.0$**: The system can go unstable because Normal controller fluctuations will be exaggerated.
 ### 2. Pure Pursuit Controller
 ![pure_varidate](./image/pure_varidate.png)
 From graph, we can analyze the effect of different values of k or $K_{dd}$ in formular

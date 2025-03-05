@@ -69,27 +69,12 @@ class ControllerServer(Node):
         self.robot_yaw = 0.0
         self.v_avr = 0.0
         self.state = 0
-        self.alpha_error = 0.0
-        self.elapsed_time = 0.0
 
         pkg_name = 'limo_controller'
         path_pkg_share_path = get_package_share_directory(pkg_name)
         ws_path, _ = path_pkg_share_path.split('install')
         file = self.get_parameter('file').value
         self.path_path = os.path.join(ws_path, 'src/Mobile-Robot-LAB-1', pkg_name, 'config', file)
-        ctf_file = 'pid.yaml'
-        self.yaml_file = os.path.join(ws_path, 'src/Mobile-Robot-LAB-1', pkg_name, 'config', ctf_file)
-        self.is_moving = False  # Flag to track when vehicle starts moving
-
-        self.data = {}
-        
-        if os.path.exists(self.yaml_file):
-            with open(self.yaml_file, 'r') as f:
-                self.data = yaml.safe_load(f) or {}
-        
-        k_key = f'ki = {self.ki}'
-        if k_key not in self.data:
-            self.data[k_key] = {'path': []}
 
         # PID controllers for linear and angular velocities
         self.linear_pid = PIDController(Kp=1.0, Ki=0.0, Kd=0.0)
@@ -100,7 +85,7 @@ class ControllerServer(Node):
         self.K_dd = 1.0
         self.min_ld = 0.3
         self.max_ld = 3.0
-        self.lookahead_distance = 0.5
+        self.lookahead_distance = 0.0
 
         # Stanley controllers
         self.linear_velo_stan = 3.0
@@ -116,16 +101,6 @@ class ControllerServer(Node):
         # Timer for control loop
         self.dt = 0.01
         self.timer = self.create_timer(self.dt, self.timer_callback)  # 100 Hz
-        # self.stor_data = self.create_timer(0.2, self.stor_data_callback) # 5 Hz
-
-        self.run = False
-        
-    def stor_data_callback(self):
-        if self.elapsed_time > 0.0:
-            k_key = f'kd = {self.kd}'
-            self.data[k_key]['path'].append({'x': self.robot_x, 'y': self.robot_y})
-            # self.data[k_key]['cte'].append(self.alpha_error)
-
 
     def jointstates_callback(self, msg: JointState):
         """ Callback to get JointState from /joint_states topic """
@@ -142,14 +117,6 @@ class ControllerServer(Node):
             v_rl = msg.velocity[index_rl] * wheelradius
             v_rr = msg.velocity[index_rr] * wheelradius
             self.v_avr = (v_rl + v_rr) / 2
-            # Start data collection when the vehicle moves
-            if self.v_avr > 0.01:
-                self.is_moving = True  
-
-    def save_data(self):
-        with open(self.yaml_file, 'w') as f:
-            yaml.dump(self.data, f, default_flow_style=False)
-        self.get_logger().info(f"Final data saved to {self.yaml_file}")
 
     def load_path(self):
         with open(self.path_path, 'r') as file:
@@ -185,9 +152,6 @@ class ControllerServer(Node):
         control_mode = self.get_parameter('control_mode').value
         if control_mode == 'pid':
             self.pid_control()
-            if self.run:
-                k_key = f'ki = {self.ki}'
-                self.data[k_key]['path'].append({'x': self.robot_x, 'y': self.robot_y})
         elif control_mode == 'pure_pursuit':
             self.pure_pursuit_control()
         elif control_mode == 'stanley':
@@ -197,20 +161,10 @@ class ControllerServer(Node):
             self.pure_pursuit_control()
 
     def pid_control(self):
-        self.run = True
         wheelbase = self.get_parameter('wheelbase').value
-        t_x = (np.linspace(-10.0, 5.0, 1000))
-        k = 2
-        x_shift = -7
-        y_shift = -8
-        t_y = 1 / (1 + np.exp(-k * (t_x - x_shift))) + y_shift
-        if self.current_target_idx >= len(t_x)-1:
+        if self.current_target_idx >= len(self.path):
             # self.current_target_idx = 0  # Reset index to loop the path
             self.pub_cmd(0.0, 0.0)
-            self.get_logger().info("Run finish, saving data...")
-            self.save_data()
-            self.destroy_node()
-            rclpy.shutdown()
             return # Stop
 
         # target = self.path[self.current_target_idx]
@@ -221,13 +175,12 @@ class ControllerServer(Node):
         fy = self.robot_y + (wheelbase/2 * np.sin(self.robot_yaw))
 
         # Search nearest point index
-        # dx = [fx - target_x['x'] for target_x in self.path]
-        # dy = [fy - target_y['y'] for target_y in self.path]
-        dx = [fx - target_x for target_x in t_x]
-        dy = [fy - target_y for target_y in t_y]
+        dx = [fx - target_x['x'] for target_x in self.path]
+        dy = [fy - target_y['y'] for target_y in self.path]
         d = np.hypot(dx, dy)
         self.current_target_idx = np.argmin(d)
-        distance_error = d[self.current_target_idx]
+        # distance_error = d[self.current_target_idx]
+
         # Project RMS error onto front axle vector
         front_axle_vec = [-np.cos(self.robot_yaw + np.pi / 2),-np.sin(self.robot_yaw + np.pi / 2)]
         e_fa = np.dot([dx[self.current_target_idx], dy[self.current_target_idx]], front_axle_vec)
@@ -237,6 +190,7 @@ class ControllerServer(Node):
         linear_velocity = 2.0
         angular_velocity = self.angular_pid.get_control(e_fa, self.dt)
 
+        # Limit steering angle
         beta = math.atan(angular_velocity * wheelbase / linear_velocity)
         beta = max(-0.6, min(beta, 0.6))
         angular_velocity = (linear_velocity * math.tan(beta)) / wheelbase
@@ -258,6 +212,7 @@ class ControllerServer(Node):
         target = self.path[self.current_target_idx]
         target_x, target_y = target['x'], target['y']
 
+        # Distance Calculation
         dx = target_x - self.robot_x
         dy = target_y - self.robot_y
         distance_error = math.hypot(dx, dy)
