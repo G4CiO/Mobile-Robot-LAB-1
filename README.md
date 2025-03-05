@@ -121,7 +121,10 @@
 ### Forward Kinematics
 1. Create node [odometry_calculation.py](limo_controller/scripts/odometry_calculation.py) for compute Forward Kinematics from **wheel speed** to **odometry** by use 3 model. 
 
-    This is a [video](https://www.youtube.com/watch?v=vwcmgAkdV_g) show odometry  from different model, Blue is Ground Truth, Red is Yaw rate, Yellow is Single Track and Green is Double Track.
+    And this is a video show odometry  from different model, Blue is Ground Truth, Red is Yaw rate, Yellow is Single Track and Green is Double Track.
+
+    [![Video Title](https://img.youtube.com/vi/vwcmgAkdV_g/0.jpg)](https://www.youtube.com/watch?v=vwcmgAkdV_g)
+
     #### 1.1 Yaw rate
     The *Yaw-Rate-Odometry Model* (OdoYawRate) uses the yaw rate $\omega^x$ directly measured by the gyroscope sensor as the infor- mation for the rotation. 
     
@@ -543,7 +546,9 @@ First *Spawn robot* by command from LAB 1.1 then
     - May have Overshoot if the parameter values ​​are not appropriate.
 ## Varidation
 This is how i varidate pid control:
-<video controls src="PID varidate.mp4" title="Title"></video>
+
+https://github.com/user-attachments/assets/44a71ffc-22f5-4fce-b8a9-c82b96a618cc
+
 ### 1. PID Controller
 #### 1.1 P Control
 ![kp](./image/kp.png)
