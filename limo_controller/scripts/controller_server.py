@@ -77,7 +77,8 @@ class ControllerServer(Node):
         self.path_path = os.path.join(ws_path, 'src/Mobile-Robot-LAB-1', pkg_name, 'config', file)
 
         # PID controllers for linear and angular velocities
-        self.linear_pid = PIDController(Kp=1.0, Ki=0.0, Kd=0.0)
+        # self.linear_pid = PIDController(Kp=1.0, Ki=0.0, Kd=0.0)
+        self.linear_velo_pid = 3.0
         self.angular_pid = PIDController(Kp=self.kp, Ki=self.ki, Kd=self.kd)
 
         # Pure Puresuit controllers
@@ -187,16 +188,15 @@ class ControllerServer(Node):
 
         # Get control inputs from PID controllers
         # linear_velocity = self.linear_pid.get_control(distance_error, self.dt)
-        linear_velocity = 2.0
         angular_velocity = self.angular_pid.get_control(e_fa, self.dt)
 
         # Limit steering angle
-        beta = math.atan(angular_velocity * wheelbase / linear_velocity)
+        beta = math.atan(angular_velocity * wheelbase / self.linear_velo_pid)
         beta = max(-0.6, min(beta, 0.6))
-        angular_velocity = (linear_velocity * math.tan(beta)) / wheelbase
+        angular_velocity = (self.linear_velo_pid * math.tan(beta)) / wheelbase
 
         # Publish velocity command
-        self.pub_cmd(linear_velocity, angular_velocity)
+        self.pub_cmd(self.linear_velo_pid, angular_velocity)
 
     def pure_pursuit_control(self):
         wheelbase = self.get_parameter('wheelbase').value

@@ -72,6 +72,7 @@
 
     <img src=./image/map.png width="300" height="200"/>
     <img src=./image/spawn.png width="300" height="200"/>
+    <img src=./image/spawn2.png width="300" height="200"/>
 
 ### Inverse Kinematics
 1. Create node [steering_model_node.py](limo_controller/scripts/steering_model_node.py) for compute Inverse Kinematics that get **cmd_vel** and turn to **wheel speed** of robot.
@@ -118,7 +119,9 @@
     delta_R = math.atan((wheelbase * math.tan(delta_ack)) / (wheelbase + 0.5 * track_width * math.tan(delta_ack)))
     ```
 ### Forward Kinematics
-1. Create node [odometry_calculation.py](limo_controller/scripts/odometry_calculation.py) for compute Forward Kinematics from **wheel speed** to **odometry** by use 3 model.
+1. Create node [odometry_calculation.py](limo_controller/scripts/odometry_calculation.py) for compute Forward Kinematics from **wheel speed** to **odometry** by use 3 model. 
+
+    This is a [video](https://www.youtube.com/watch?v=vwcmgAkdV_g) show odometry  from different model, Blue is Ground Truth, Red is Yaw rate, Yellow is Single Track and Green is Double Track.
     #### 1.1 Yaw rate
     The *Yaw-Rate-Odometry Model* (OdoYawRate) uses the yaw rate $\omega^x$ directly measured by the gyroscope sensor as the infor- mation for the rotation. 
     
@@ -531,6 +534,8 @@ First *Spawn robot* by command from LAB 1.1 then
 - **Limitations**:
     - May have Overshoot if the parameter values ​​are not appropriate.
 ## Varidation
+This is how i varidate pid control:
+<video controls src="PID varidate.mp4" title="Title"></video>
 ### 1. PID Controller
 #### 1.1 P Control
 ![kp](./image/kp.png)
