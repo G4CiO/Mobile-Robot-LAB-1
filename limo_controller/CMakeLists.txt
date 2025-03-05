@@ -32,10 +32,9 @@ install(PROGRAMS
   scripts/odometry_calculation.py
   scripts/controller_server.py
   scripts/path_publisher.py
-  scripts/odometry_plotter.py
   scripts/xyz_plotter.py
-  scripts/all_plotter.py
   scripts/xyz_plotter_separate.py
+  scripts/cross_track_logger.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

@@ -403,7 +403,7 @@ First *Spawn robot* by command from LAB 1.1 then
     - Cannot handle tight curves well, as it can cause high error.
     - If the look-ahead distance is set too high, the robot may deviate from the path.
 
-### 3. Stanley Control
+### 3. Stanley Controller
 - **Working principle**:
     - The Stanley method is a nonlinear feedback function of the cross track error $e_{fa}$, measured from the center of the front axle to the nearest path point $(c_x, c_y)$, Co-locating the point of control with the steered front wheels allows for an intuitive control law, where the first term simply keeps the wheels aligned with the given path by setting the steering angle $\delta$ equal to the heading error
 
@@ -422,9 +422,6 @@ First *Spawn robot* by command from LAB 1.1 then
         - $k$ is a gain parameter of wheels are steered further towards the path,
         - $e_{fa}$ is cross track error,
         - $v_x$ is linear velocity in x axis of vehicle.
-    - But at Low speed operation can cause numerical instability, So we will add softening constant $k_s$ to controller
-
-        $$\delta(t) = \theta_e(t) + \tan^{-1}(\frac{ke_{fa}(t)}{k_s + v_x(t)})$$
 
     - Can implement in code:
         ```python
@@ -457,7 +454,7 @@ First *Spawn robot* by command from LAB 1.1 then
 
             # Stanley control formula
             if self.v != 0.0:
-                delta = theta_e + np.arctan2(self.k * e_fa, self.ks + self.v)
+                delta = theta_e + np.arctan2(self.k * e_fa, self.v)
                 delta = max(-0.6, min(delta, 0.6))
             else:
                 delta = 0.0
@@ -474,10 +471,61 @@ First *Spawn robot* by command from LAB 1.1 then
     - Can handle relatively tight curves better than Pure Pursuit.
     - Has better stability due to Heading error control.
 - **Limitations**:
-    - May have sway at low speeds (Low-speed instability). It can fix by add softening constant in controller.
     - May have Overshoot if the parameter values ​​are not appropriate.
 ## Varidation
-### Result
+### 1. PID Controller
+#### 1.1 P  
+### 2. Pure Pursuit Controller
+![pure_varidate](./image/pure_varidate.png)
+From graph, we can analyze the effect of different values of k or $K_{dd}$ in formular
+
+$$\delta = \arctan(\frac{2L\sin(\alpha)}{K_{dd}v})$$
+
+in Pure Pursuit Controller while keeping the vehicle speed constant at 3 m/s.
+
+#### Key Observations:
+1. Heading Error Over Time (Top Plot)
+- **k = 0.1 (blue):** lead to more oscillations in the heading error.
+- **k = 0.5 (orange):** show more stable behavior but take longer to settle.
+- **k = 1.0 (green):** appears to balance between stability and responsiveness.
+2. Path Tracking Performance (Bottom Plot)
+- **k = 0.1 (blue):** The vehicle closely follows the reference path but reacts slowly to turns.
+- **k = 0.5 (orange):** The trajectory is smoother and follows the path well without excessive oscillation.
+- **k = 1.0 (green):** The vehicle shows aggressive steering, leading to oscillations and overshooting, particularly in curved sections.
+#### Effect of k in Pure Pursuit
+- **k = 0.1 (blue):** Results in slow response, making the vehicle lag behind the intended path, especially in sharp turns.
+- **k = 0.5 (orange):** Provides a good balance between stability and responsiveness, making it the best choice for smooth tracking.
+- **k = 1.0 (green):** Makes the controller more aggressive, leading to oscillations and instability in curvy paths.
+#### Conclusion:
+- A moderate of k value appears to be the most effective for maintaining stability and accuracy in path tracking.
+- A higher of k value can cause instability due to aggressive corrections, especially at high speeds.
+- A lower of k value can cause slow corrections, making the vehicle struggle to follow tight curves.
+
+### 3. Stanley Controller
+![stan_varidate](./image/stan_varidate.png)
+From graph, we can analyze the effect of different values of $k$ in formular
+
+$$\delta(t) = \theta_e(t) + \tan^{-1}(\frac{ke_{fa}(t)}{v_x(t)})$$
+
+in the Stanley Controller while keeping the vehicle speed constant at 3 m/s.
+
+#### Key Observations:
+1. Cross Track Error Over Time (Top Plot)
+- **k = 1.0 (blue):** shows higher cross-track error, indicating that the controller is not responding aggressively enough to correct deviations.
+- **k = 5.0 (orange):** reduces the cross-track error, showing improved performance.
+- **k = 10.0 (green):** results in the lowest cross-track error, keeping the vehicle very close to the reference path.
+2. Path Tracking Performance (Bottom Plot)
+- **k = 1.0 (blue):** The vehicle deviates more from the reference path, particularly in curved sections.
+- **k = 5.0 (orange):** The trajectory follows the reference path more closely.
+- **k = 10.0 (green):** The best tracking performance, with minimal deviation from the reference path.
+#### Effect of k in Stanley Controller
+- **k = 1.0 (blue):** The vehicle does not correct deviations aggressively enough, leading to higher cross-track errors.
+- **k = 5.0 (orange):** Balances responsiveness and stability, providing good tracking without excessive oscillations.
+- **k = 10.0 (green):** Provides very precise path tracking but may cause instability at higher speeds.
+#### Conclusion:
+- Increasing k improves tracking accuracy by reducing the cross-track error.
+- However, very high k values can cause excessive steering corrections, potentially leading to oscillations at higher speeds.
+- A moderate k seems to provide the best trade-off between accuracy and stability for this scenario.
 
 # LAB 1.3 Extended kalman filter && Tuning Q and R 
 
