@@ -327,8 +327,17 @@ First *Spawn robot* by command from LAB 1.1 then
     ```
 ### Create node [controller_server.py](limo_controller/scripts/controller_server.py) for compute cmd_vel from ground truth odometry by 3 controller.
 ### 1. PID Controller
-- **Working principle**: Use the cross track error value that have perpendicular direction with respect from front vehicle to the desired trajectory, and use proportional (P), integral (I) and derivative (D) controllers to adjust the control value to make the robot run along the path.
-    - Can implement in code:
+- **Working principle**: Use the cross track error value that have perpendicular direction with respect from front vehicle to the desired trajectory, and use proportional (P), integral (I) and derivative (D) controllers to adjust the control value to make the robot run along the path. It have formular like this
+
+    $$u(t) = K_p e(t) + K_i \int e(t) dt + K_d \frac{d}{dt} e(t)$$
+
+    where:
+    - $ u(t) $ is the control input (e.g., steering angle)
+    - $ e(t) = r(t) - y(t) $ is the error (difference between desired state $ r(t) $ and actual state $ y(t) $ e.g., cross track error)
+    - $ K_p $ is the proportional gain
+    - $ K_i $ is the integral gain
+    - $ K_d $ is the derivative gain
+- Can implement in code:
     ```python  
     # For initialize PID Gain
     class PIDController:
@@ -375,16 +384,15 @@ First *Spawn robot* by command from LAB 1.1 then
 
         # Get control inputs from PID controllers
         # linear_velocity = self.linear_pid.get_control(distance_error, self.dt)
-        linear_velocity = 2.0
         angular_velocity = self.angular_pid.get_control(e_fa, self.dt)
 
         # Limit steering angle
-        beta = math.atan(angular_velocity * wheelbase / linear_velocity)
+        beta = math.atan(angular_velocity * wheelbase / self.linear_velo_pid)
         beta = max(-0.6, min(beta, 0.6))
-        angular_velocity = (linear_velocity * math.tan(beta)) / wheelbase
+        angular_velocity = (self.linear_velo_pid * math.tan(beta)) / wheelbase
 
         # Publish velocity command
-        self.pub_cmd(linear_velocity, angular_velocity)
+        self.pub_cmd(self.linear_velo_pid, angular_velocity)
     ```
 - **Suitability**:
     - Suitable for simple routes such as straight lines or simple curves.
